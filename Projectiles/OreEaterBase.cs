@@ -16,7 +16,7 @@ namespace AutoStacker.Projectiles
 		private const int FullBrightTicks = 2;
 		private const int FadeOutTicks = 30;
 		private const int Range = 10;
-		private readonly string _displayName = "Ore Eater Base";
+		private const string _displayName = "Ore Eater Base";
 		private int _rangeHypoteneus = (int)Math.Sqrt(Range * Range + Range * Range);
 
 		private int _originX;
@@ -162,7 +162,7 @@ namespace AutoStacker.Projectiles
 			}
 			else
 			{
-				int target = -1;
+				int target;
 				if (pet.StatusAIndex.ContainsKey(3))
 					target = 3;
 				else if (pet.StatusAIndex.ContainsKey(4))
@@ -177,7 +177,7 @@ namespace AutoStacker.Projectiles
 					_routeCount = pet.RouteListX.Count - 1;
 					if (target == 4)
 					{
-						_routeCount = _routeCount - _routeCountShift;
+						_routeCount -= _routeCountShift;
 						_routeCountShift = _routeCount;
 					}
 				}
@@ -297,10 +297,9 @@ namespace AutoStacker.Projectiles
 			if (_tileId < TextureAssets.Tile.Length)
 			{
 				ModTile tile = TileLoader.GetTile(_tileId);
-				if (
-					TileID.Sets.Ore[_tileId] || tile != null && tile.Name != null && OreRegex.IsMatch(tile.Name)
-				)
+				if (TileID.Sets.Ore[_tileId] || tile?.Name != null && OreRegex.IsMatch(tile.Name))
 					_oreTile[_tileId] = true;
+
 				_tileId += 1;
 				if (_tileId == TextureAssets.Tile.Length)
 					//Main.recipe.Where( recipe => recipe.createItem.modItem != null && recipe.createItem.modItem.DisplayName != null && gemRegex.IsMatch( recipe.createItem.modItem.DisplayName.GetDefault() )).SelectMany( recipe => recipe.requiredItem ).Where(item => item.createTile != null && item.createTile != -1 ).Any(item => _oreTile[item.createTile] = true );
@@ -413,7 +412,7 @@ namespace AutoStacker.Projectiles
 				Ay[index] + dY >= Main.Map.MaxHeight ||
 				Ay[index] + dY <= 1 ||
 				!Main.Map.IsRevealed(Ax[index] + dX, Ay[index] + dY) ||
-				tile != null && tile.IsActive && (!tile.IsActive || !_oreTile.ContainsKey(tile.type)))
+				tile != null && tile.IsActive && !_oreTile.ContainsKey(tile.type))
 				return false;
 
 			if (tile.type == TileID.Chlorophyte && pickPower <= 200 ||
@@ -440,10 +439,7 @@ namespace AutoStacker.Projectiles
 
 			int check = 1;
 			TileLoader.PickPowerCheck(tile, pickPower, ref check);
-			if (check == 0)
-				return false;
-
-			return true;
+			return check != 0;
 		}
 
 		private bool CheckCanPick(int index, int pickPower)
@@ -486,16 +482,10 @@ namespace AutoStacker.Projectiles
 				return false;
 			//_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
 
-			if (
-				tile.IsActive &&
-				_oreTile.ContainsKey(tile.type) &&
-				(
-					tileUpper == null ||
-					tileUpper.type != TileID.Containers && tileUpper.type != TileID.DemonAltar
-				)
-			)
-				return true;
-			return false;
+			return tile.IsActive &&
+				   _oreTile.ContainsKey(tile.type) &&
+				   (tileUpper == null ||
+					tileUpper.type != TileID.Containers && tileUpper.type != TileID.DemonAltar);
 		}
 
 		public void MakeRoute(int status, int routeNo, int maxSerchNum)
@@ -508,8 +498,8 @@ namespace AutoStacker.Projectiles
 				RouteListY.Add(Ay[StatusAIndex[status][routeNo]]);
 				for (int count = 0; count <= maxSerchNum; count++)
 				{
-					int x = RouteListX[RouteListX.Count - 1];
-					int y = RouteListY[RouteListY.Count - 1];
+					int x = RouteListX[^1];
+					int y = RouteListY[^1];
 
 					if (
 						!PetDictionaryA.ContainsKey(x) || !PetDictionaryA[x].ContainsKey(y)
@@ -525,7 +515,7 @@ namespace AutoStacker.Projectiles
 						RouteListX.Add(RouteAx[PetDictionaryA[x][y]]);
 						RouteListY.Add(RouteAy[PetDictionaryA[x][y]]);
 
-						if (NA[PetDictionaryA[RouteListX[RouteListX.Count - 1]][RouteListY[RouteListY.Count - 1]]] == 0)
+						if (NA[PetDictionaryA[RouteListX[^1]][RouteListY[^1]]] == 0)
 							break;
 					}
 				}

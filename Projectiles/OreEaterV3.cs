@@ -34,14 +34,13 @@ namespace AutoStacker.Projectiles
 		public override bool CheckCanMove(int index, int dX, int dY, int pickPower)
 		{
 			Tile tile = Main.tile[Ax[index], Ay[index]];
-
 			if (PetDictionaryA.ContainsKey(Ax[index] + dX) && PetDictionaryA[Ax[index] + dX].ContainsKey(Ay[index] + dY) ||
 				Ax[index] + dX >= Main.Map.MaxWidth ||
 				Ax[index] + dX <= 1 ||
 				Ay[index] + dY >= Main.Map.MaxHeight ||
 				Ay[index] + dY <= 1 ||
 				!Main.Map.IsRevealed(Ax[index] + dX, Ay[index] + dY) ||
-				tile != null && tile.IsActive && (!tile.IsActive || !OreTile.ContainsKey(tile.type) || !OreTile[tile.type]))
+				tile != null && tile.IsActive && (!OreTile.ContainsKey(tile.type) || !OreTile[tile.type]))
 				return false;
 
 			if (tile.type == TileID.Chlorophyte && pickPower <= 200 ||

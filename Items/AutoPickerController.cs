@@ -93,7 +93,7 @@ namespace AutoStacker.Items
 			return true;
 		}
 
-		private bool CallMagicStorageFindHeart(Point16 origin) => MagicStorageConnecter.FindHeart(origin) != null;
+		private static bool CallMagicStorageFindHeart(Point16 origin) => MagicStorageConnecter.FindHeart(origin) != null;
 
 		public override void AddRecipes()
 		{

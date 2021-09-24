@@ -139,8 +139,10 @@ namespace AutoStacker.Worlds
 			{
 				foreach (int chestNo2 in _minionHousePlayer.Keys)
 				{
-					Main.player[_minionHousePlayerNo[chestNo2]] = new Player();
-					Main.player[_minionHousePlayerNo[chestNo2]].active = false;
+					Main.player[_minionHousePlayerNo[chestNo2]] = new Player
+					{
+						active = false
+					};
 				}
 
 				Init();

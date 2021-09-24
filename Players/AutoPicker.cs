@@ -54,7 +54,7 @@ namespace AutoStacker.Players
 				CallClearMiningCacheAt(x, y, 1);
 				if (Main.netMode == NetmodeID.MultiplayerClient && Main.tileContainer[Main.tile[x, y].type])
 				{
-					if (Main.tile[x, y].type == TileID.DisplayDoll || Main.tile[x, y].type == TileID.HatRack)
+					if (Main.tile[x, y].type is TileID.DisplayDoll or TileID.HatRack)
 					{
 						NetMessage.SendData(MessageID.TileManipulation, -1, -1, null, 20, x, y);
 					}

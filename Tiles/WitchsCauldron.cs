@@ -49,7 +49,7 @@ namespace AutoStacker.Tiles
 
 		public override bool HasSmartInteract() => true;
 
-		public string MapChestName(string name, int i, int j)
+		public static string MapChestName(string name, int i, int j)
 		{
 			int left = i;
 			int top = j;

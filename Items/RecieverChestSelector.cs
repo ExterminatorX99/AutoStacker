@@ -101,7 +101,7 @@ namespace AutoStacker.Items
 					modPlayer.AutoSendEnabled = true;
 
 					Active = true;
-					if (modPlayer.ActiveItem != null && modPlayer.ActiveItem.ModItem != null)
+					if (modPlayer.ActiveItem?.ModItem != null)
 						if (!modPlayer.ActiveItem.Equals(Item))
 							((RecieverChestSelector)modPlayer.ActiveItem.ModItem).Active = false;
 					modPlayer.ActiveItem = Item;
@@ -139,12 +139,7 @@ namespace AutoStacker.Items
 			return true;
 		}
 
-		private bool CallMagicStorageFindHeart(Point16 origin)
-		{
-			if (MagicStorageConnecter.FindHeart(origin) == null)
-				return false;
-			return true;
-		}
+		private static bool CallMagicStorageFindHeart(Point16 origin) => MagicStorageConnecter.FindHeart(origin) != null;
 
 		// RightClick
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -169,7 +164,7 @@ namespace AutoStacker.Items
 				else
 				{
 					Active = true;
-					if (modPlayer.ActiveItem != null && modPlayer.ActiveItem.ModItem != null)
+					if (modPlayer.ActiveItem?.ModItem != null)
 						((RecieverChestSelector)modPlayer.ActiveItem.ModItem).Active = false;
 					modPlayer.ActiveItem = Item;
 

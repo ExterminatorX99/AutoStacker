@@ -324,7 +324,7 @@ namespace AutoStacker.Tiles
 			// Main.NewText(picker.X +","+picker.Y);
 		}
 
-		private bool CanPick(int x, int y, int pickPower)
+		private static bool CanPick(int x, int y, int pickPower)
 		{
 			Tile tile = Main.tile[x, y];
 			if (tile.type == TileID.Chlorophyte && pickPower <= 200 ||

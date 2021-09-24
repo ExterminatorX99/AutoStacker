@@ -8,7 +8,7 @@ namespace AutoStacker.Worlds
 {
 	public class ItemGrowerChest : ModSystem
 	{
-		private readonly int _timeStep = 10;
+		private const int TimeStep = 10;
 		private readonly Dictionary<Chest, List<ChestItem>> _chestItems = new();
 		private int _moonPhasePrev;
 		private int _time2Prev;
@@ -22,12 +22,12 @@ namespace AutoStacker.Worlds
 
 			if (passTime2 > 3600)
 			{
-				_time2Prev = time2 - time2 % _timeStep;
+				_time2Prev = time2 - time2 % TimeStep;
 				_moonPhasePrev = moonPhase;
 				return;
 			}
 
-			if (passTime2 < _timeStep)
+			if (passTime2 < TimeStep)
 				return;
 
 			IEnumerable<Chest> chests = Main.chest.Where

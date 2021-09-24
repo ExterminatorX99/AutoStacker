@@ -14,7 +14,7 @@ namespace AutoStacker.WorldGen
 {
 	public class AutoPicker : Terraria.WorldGen
 	{
-		private static readonly bool StopDrops = false;
+		private const bool StopDrops = false;
 
 		public static void KillTile2(Tiles.AutoPicker autoPicker, int i, int j, bool fail = false, bool effectOnly = false, bool noItem = false)
 		{
@@ -94,10 +94,7 @@ namespace AutoStacker.WorldGen
 						case 147:
 						case 224:
 						{
-							if (genRand.Next(2) == 0)
-								SoundEngine.PlaySound(SoundID.Item48, i * 16, j * 16);
-							else
-								SoundEngine.PlaySound(SoundID.Item49, i * 16, j * 16);
+							SoundEngine.PlaySound(genRand.NextBool(2) ? SoundID.Item48 : SoundID.Item49, i * 16, j * 16);
 
 							break;
 						}
@@ -131,138 +128,143 @@ namespace AutoStacker.WorldGen
 						}
 						default:
 						{
-							if (Main.tileAlch[tile.type] ||
-								tile.type == TileID.LivingMahoganyLeaves ||
-								tile.type == TileID.DyePlants ||
-								tile.type == TileID.CorruptThorns ||
-								tile.type == TileID.Cobweb ||
-								tile.type == TileID.Vines ||
-								tile.type == TileID.JunglePlants ||
-								tile.type == TileID.JungleVines ||
-								tile.type == TileID.JungleThorns ||
-								tile.type == TileID.MushroomPlants ||
-								tile.type == TileID.Plants2 ||
-								tile.type == TileID.JunglePlants2 ||
-								tile.type == TileID.HallowedPlants2 ||
-								tile.type == TileID.HallowedVines ||
-								tile.type == TileID.LongMoss ||
-								tile.type == TileID.LeafBlock ||
-								tile.type == TileID.CrimsonVines ||
-								tile.type == TileID.PlantDetritus ||
-								tile.type == TileID.CrimsonThorns ||
-								tile.type == TileID.VineFlowers)
+							if (Main.tileAlch[tile.type])
 							{
 								SoundEngine.PlaySound(6, i * 16, j * 16);
+								break;
 							}
-							else if (tile.type == TileID.CrimsonPlants)
+
+							switch (tile.type)
 							{
-								SoundEngine.PlaySound(6, i * 16, j * 16);
-								if (tile.frameX == 270)
-									if (!autoPicker.Deposit(i * 16, j * 16, 16, 16, 2887))
-										Item.NewItem(i * 16, j * 16, 16, 16, 2887);
-							}
-							else if (tile.type == TileID.Stone ||
-									 tile.type == TileID.Iron ||
-									 tile.type == TileID.Copper ||
-									 tile.type == TileID.Gold ||
-									 tile.type == TileID.Silver ||
-									 tile.type == TileID.Demonite ||
-									 tile.type == TileID.DemoniteBrick ||
-									 tile.type == TileID.Ebonstone ||
-									 tile.type == TileID.Meteorite ||
-									 tile.type == TileID.GrayBrick ||
-									 tile.type == TileID.RedBrick ||
-									 tile.type == TileID.BlueDungeonBrick ||
-									 tile.type == TileID.GreenDungeonBrick ||
-									 tile.type == TileID.PinkDungeonBrick ||
-									 tile.type == TileID.GoldBrick ||
-									 tile.type == TileID.SilverBrick ||
-									 tile.type == TileID.CopperBrick ||
-									 tile.type == TileID.Spikes ||
-									 tile.type == TileID.Obsidian ||
-									 tile.type == TileID.Hellstone ||
-									 tile.type == TileID.Sapphire ||
-									 tile.type == TileID.Ruby ||
-									 tile.type == TileID.Emerald ||
-									 tile.type == TileID.Topaz ||
-									 tile.type == TileID.Amethyst ||
-									 tile.type == TileID.Diamond ||
-									 tile.type == TileID.ObsidianBrick ||
-									 tile.type == TileID.HellstoneBrick ||
-									 tile.type == TileID.Cobalt ||
-									 tile.type == TileID.Mythril ||
-									 tile.type == TileID.Adamantite ||
-									 tile.type == TileID.Pearlstone ||
-									 tile.type == TileID.PearlstoneBrick ||
-									 tile.type == TileID.IridescentBrick ||
-									 tile.type == TileID.Mudstone ||
-									 tile.type == TileID.CobaltBrick ||
-									 tile.type == TileID.MythrilBrick ||
-									 tile.type == TileID.AdamantiteBeam ||
-									 tile.type == TileID.SandstoneBrick ||
-									 tile.type == TileID.EbonstoneBrick ||
-									 tile.type == TileID.RedStucco ||
-									 tile.type == TileID.YellowStucco ||
-									 tile.type == TileID.GreenStucco ||
-									 tile.type == TileID.GrayStucco ||
-									 tile.type == TileID.RainbowBrick ||
-									 tile.type == TileID.IceBlock ||
-									 tile.type == TileID.Tin ||
-									 tile.type == TileID.Lead ||
-									 tile.type == TileID.Tungsten ||
-									 tile.type == TileID.Platinum ||
-									 tile.type == TileID.TinBrick ||
-									 tile.type == TileID.TungstenBrick ||
-									 tile.type == TileID.PlatinumBrick ||
-									 tile.type == TileID.Crimstone ||
-									 tile.type == TileID.Sunplate ||
-									 tile.type == TileID.Crimtane ||
-									 tile.type == TileID.IceBrick ||
-									 tile.type == TileID.Chlorophyte ||
-									 tile.type == TileID.Palladium ||
-									 tile.type == TileID.Orichalcum ||
-									 tile.type == TileID.Titanium ||
-									 tile.type == TileID.LihzahrdBrick ||
-									 tile.type == TileID.PalladiumColumn ||
-									 tile.type == TileID.BubblegumBlock ||
-									 tile.type == TileID.Titanstone ||
-									 tile.type == TileID.Cog ||
-									 tile.type == TileID.StoneSlab ||
-									 tile.type == TileID.SandStoneSlab ||
-									 tile.type == TileID.CopperPlating ||
-									 tile.type == TileID.TinPlating ||
-									 tile.type == TileID.ChlorophyteBrick ||
-									 tile.type == TileID.CrimtaneBrick ||
-									 tile.type == TileID.ShroomitePlating ||
-									 tile.type == TileID.MartianConduitPlating ||
-									 tile.type == TileID.Marble ||
-									 tile.type == TileID.MarbleBlock ||
-									 tile.type == TileID.Granite ||
-									 tile.type == TileID.GraniteBlock ||
-									 tile.type == TileID.MeteoriteBrick ||
-									 tile.type == TileID.FossilOre)
-							{
-								SoundEngine.PlaySound(21, i * 16, j * 16);
-							}
-							else if (tile.type == TileID.Larva || tile.type == TileID.FleshBlock)
-							{
-								SoundEngine.PlaySound(4, i * 16, j * 16);
-							}
-							else if (tile.type == TileID.DemonAltar && tile.frameX >= 54)
-							{
-								SoundEngine.PlaySound(4, i * 16, j * 16);
-							}
-							else if (tile.type == TileID.MinecartTrack)
-							{
-								SoundEngine.PlaySound(SoundID.Item52, i * 16, j * 16);
-							}
-							else if (tile.type >= TileID.CopperCoinPile && tile.type <= TileID.PlatinumCoinPile)
-							{
-								SoundEngine.PlaySound(18, i * 16, j * 16);
-							}
-							else if (tile.type != TileID.Boulder)
-							{
-								SoundEngine.PlaySound(0, i * 16, j * 16);
+								case TileID.LivingMahoganyLeaves:
+								case TileID.DyePlants:
+								case TileID.CorruptThorns:
+								case TileID.Cobweb:
+								case TileID.Vines:
+								case TileID.JunglePlants:
+								case TileID.JungleVines:
+								case TileID.JungleThorns:
+								case TileID.MushroomPlants:
+								case TileID.Plants2:
+								case TileID.JunglePlants2:
+								case TileID.HallowedPlants2:
+								case TileID.HallowedVines:
+								case TileID.LongMoss:
+								case TileID.LeafBlock:
+								case TileID.CrimsonVines:
+								case TileID.PlantDetritus:
+								case TileID.CrimsonThorns:
+								case TileID.VineFlowers:
+									SoundEngine.PlaySound(6, i * 16, j * 16);
+									break;
+								case TileID.CrimsonPlants:
+								{
+									SoundEngine.PlaySound(6, i * 16, j * 16);
+									if (tile.frameX == 270)
+										if (!autoPicker.Deposit(i * 16, j * 16, 16, 16, 2887))
+											Item.NewItem(i * 16, j * 16, 16, 16, 2887);
+									break;
+								}
+								case TileID.Stone:
+								case TileID.Iron:
+								case TileID.Copper:
+								case TileID.Gold:
+								case TileID.Silver:
+								case TileID.Demonite:
+								case TileID.DemoniteBrick:
+								case TileID.Ebonstone:
+								case TileID.Meteorite:
+								case TileID.GrayBrick:
+								case TileID.RedBrick:
+								case TileID.BlueDungeonBrick:
+								case TileID.GreenDungeonBrick:
+								case TileID.PinkDungeonBrick:
+								case TileID.GoldBrick:
+								case TileID.SilverBrick:
+								case TileID.CopperBrick:
+								case TileID.Spikes:
+								case TileID.Obsidian:
+								case TileID.Hellstone:
+								case TileID.Sapphire:
+								case TileID.Ruby:
+								case TileID.Emerald:
+								case TileID.Topaz:
+								case TileID.Amethyst:
+								case TileID.Diamond:
+								case TileID.ObsidianBrick:
+								case TileID.HellstoneBrick:
+								case TileID.Cobalt:
+								case TileID.Mythril:
+								case TileID.Adamantite:
+								case TileID.Pearlstone:
+								case TileID.PearlstoneBrick:
+								case TileID.IridescentBrick:
+								case TileID.Mudstone:
+								case TileID.CobaltBrick:
+								case TileID.MythrilBrick:
+								case TileID.AdamantiteBeam:
+								case TileID.SandstoneBrick:
+								case TileID.EbonstoneBrick:
+								case TileID.RedStucco:
+								case TileID.YellowStucco:
+								case TileID.GreenStucco:
+								case TileID.GrayStucco:
+								case TileID.RainbowBrick:
+								case TileID.IceBlock:
+								case TileID.Tin:
+								case TileID.Lead:
+								case TileID.Tungsten:
+								case TileID.Platinum:
+								case TileID.TinBrick:
+								case TileID.TungstenBrick:
+								case TileID.PlatinumBrick:
+								case TileID.Crimstone:
+								case TileID.Sunplate:
+								case TileID.Crimtane:
+								case TileID.IceBrick:
+								case TileID.Chlorophyte:
+								case TileID.Palladium:
+								case TileID.Orichalcum:
+								case TileID.Titanium:
+								case TileID.LihzahrdBrick:
+								case TileID.PalladiumColumn:
+								case TileID.BubblegumBlock:
+								case TileID.Titanstone:
+								case TileID.Cog:
+								case TileID.StoneSlab:
+								case TileID.SandStoneSlab:
+								case TileID.CopperPlating:
+								case TileID.TinPlating:
+								case TileID.ChlorophyteBrick:
+								case TileID.CrimtaneBrick:
+								case TileID.ShroomitePlating:
+								case TileID.MartianConduitPlating:
+								case TileID.Marble:
+								case TileID.MarbleBlock:
+								case TileID.Granite:
+								case TileID.GraniteBlock:
+								case TileID.MeteoriteBrick:
+								case TileID.FossilOre:
+									SoundEngine.PlaySound(21, i * 16, j * 16);
+									break;
+								case TileID.Larva:
+								case TileID.FleshBlock:
+								case TileID.DemonAltar when tile.frameX >= 54:
+									SoundEngine.PlaySound(4, i * 16, j * 16);
+									break;
+								case TileID.MinecartTrack:
+									SoundEngine.PlaySound(SoundID.Item52, i * 16, j * 16);
+									break;
+								case >= TileID.CopperCoinPile and <= TileID.PlatinumCoinPile:
+									SoundEngine.PlaySound(18, i * 16, j * 16);
+									break;
+								default:
+								{
+									if (tile.type != TileID.Boulder)
+										SoundEngine.PlaySound(0, i * 16, j * 16);
+
+									break;
+								}
 							}
 
 							break;

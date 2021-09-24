@@ -132,7 +132,7 @@ namespace AutoStacker.Worlds
 			Tile tile2 = Main.tile[num + 1, num2];
 			Tile tile3 = Main.tile[num, num2 + 1];
 			Tile tile4 = Main.tile[num, num2];
-			byte b = 2;
+			const byte b = 2;
 			if (tile4.LiquidAmount < b)
 			{
 				tile4.LiquidAmount = 0;
@@ -180,24 +180,29 @@ namespace AutoStacker.Worlds
 					for (int j = num2 - 1; j <= num2 + 1; j++)
 					{
 						Tile tile5 = Main.tile[i, j];
-						if (tile5.IsActive)
+						if (!tile5.IsActive)
+							continue;
+						switch (tile5.type)
 						{
-							if (tile5.type == TileID.Grass ||
-								tile5.type == TileID.CorruptGrass ||
-								tile5.type == TileID.HallowedGrass ||
-								tile5.type == TileID.CrimsonGrass)
+							case TileID.Grass:
+							case TileID.CorruptGrass:
+							case TileID.HallowedGrass:
+							case TileID.CrimsonGrass:
 							{
 								tile5.type = TileID.Dirt;
 								Terraria.WorldGen.SquareTileFrame(i, j);
 								if (Main.netMode == NetmodeID.Server)
 									NetMessage.SendTileSquare(-1, num, num2, 3);
+								break;
 							}
-							else if (tile5.type == TileID.JungleGrass || tile5.type == TileID.MushroomGrass)
+							case TileID.JungleGrass:
+							case TileID.MushroomGrass:
 							{
 								tile5.type = TileID.Mud;
 								Terraria.WorldGen.SquareTileFrame(i, j);
 								if (Main.netMode == NetmodeID.Server)
 									NetMessage.SendTileSquare(-1, num, num2, 3);
+								break;
 							}
 						}
 					}
