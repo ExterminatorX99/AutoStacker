@@ -1,5 +1,4 @@
-﻿using System;
-using Terraria;
+﻿using Terraria;
 using Terraria.ModLoader;
 
 namespace AutoStacker.Players
@@ -9,7 +8,7 @@ namespace AutoStacker.Players
 		public override void OnEnterWorld(Player player)
 		{
 			Worlds.MinionHouse minionHouse = ModContent.GetInstance<Worlds.MinionHouse>();
-			minionHouse.init();
+			minionHouse.Init();
 		}
 	}
 }

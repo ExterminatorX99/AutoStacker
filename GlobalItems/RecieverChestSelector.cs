@@ -1,5 +1,6 @@
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
+using AutoStacker.Common;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ID;
@@ -7,75 +8,82 @@ using Terraria.ModLoader;
 
 namespace AutoStacker.GlobalItems
 {
-	class RecieverChestSelector : GlobalItem
+	internal class RecieverChestSelector : GlobalItem
 	{
-		public static short[] ExcludeItemList = new short[10]{ItemID.CopperCoin, ItemID.SilverCoin, ItemID.GoldCoin, ItemID.PlatinumCoin, ItemID.Heart, ItemID.CandyApple, ItemID.CandyCane, ItemID.Star, ItemID.SugarPlum, ItemID.SoulCake };
-		private static Dictionary<int,List<int>> deleteQue = new Dictionary<int,List<int>>();
-		
-		
+		public static readonly short[] ExcludeItemList =
+		{
+			ItemID.CopperCoin,
+			ItemID.SilverCoin,
+			ItemID.GoldCoin,
+			ItemID.PlatinumCoin,
+			ItemID.Heart,
+			ItemID.CandyApple,
+			ItemID.CandyCane,
+			ItemID.Star,
+			ItemID.SugarPlum,
+			ItemID.SoulCake
+		};
+
+		private static readonly Dictionary<int, List<int>> DeleteQue = new();
+
 		public override bool OnPickup(Item item, Player player)
 		{
-			Players.RecieverChestSelector modPlayer = (Players.RecieverChestSelector)Main.LocalPlayer.GetModPlayer<Players.RecieverChestSelector>();
-			Point16 topLeft=modPlayer.topLeft;
+			Players.RecieverChestSelector modPlayer = Main.LocalPlayer.GetModPlayer<Players.RecieverChestSelector>();
+			Point16 topLeft = modPlayer.TopLeft;
 			if
 			(
-				modPlayer.activeItem == null 
-				|| (topLeft.X == -1 && topLeft.Y == -1) 
-				|| !modPlayer.autoSendEnabled 
-				|| ExcludeItemList.Where(x => x == item.type).Any()
-				|| item.stack <= 0
-				|| item.IsAir
+				modPlayer.ActiveItem == null ||
+				topLeft.X == -1 && topLeft.Y == -1 ||
+				!modPlayer.AutoSendEnabled ||
+				ExcludeItemList.Any(x => x == item.type) ||
+				item.stack <= 0 ||
+				item.IsAir
 			)
-			{
 				return true;
-			}
-			
+
 			//Item depositItem=item.Clone();
-			if(deposit(item, player))
+			if (Deposit(item, player))
 			{
 				item.SetDefaults(0, true);
-				if(!deleteQue.ContainsKey(item.type))
-				{
-					deleteQue[item.type] = new List<int>();
-				}
-				deleteQue[item.type].Add(item.stack);
+				if (!DeleteQue.ContainsKey(item.type))
+					DeleteQue[item.type] = new List<int>();
+				DeleteQue[item.type].Add(item.stack);
 			}
+
 			return true;
 		}
-		
+
 		public override void UpdateInventory(Item item, Player player)
 		{
-			if(deleteQue.ContainsKey(item.type))
+			if (DeleteQue.ContainsKey(item.type))
 			{
-				item.stack -= deleteQue[item.type].Sum( stack => stack );
-				if(item.stack <= 0)
-				{
+				item.stack -= DeleteQue[item.type].Sum(stack => stack);
+				if (item.stack <= 0)
 					item.SetDefaults(0, true);
-				}
-				deleteQue.Remove(item.type);
+				DeleteQue.Remove(item.type);
 			}
 		}
-		
-		public bool deposit(Item item, Player player)
+
+		public bool Deposit(Item item, Player player)
 		{
-			Players.RecieverChestSelector modPlayer = (Players.RecieverChestSelector)Main.LocalPlayer.GetModPlayer<Players.RecieverChestSelector>();
-			Point16 topLeft=modPlayer.topLeft;
-			
+			Players.RecieverChestSelector modPlayer = Main.LocalPlayer.GetModPlayer<Players.RecieverChestSelector>();
+			Point16 topLeft = modPlayer.TopLeft;
+
 			//chest
-			int chestNo=Common.AutoStacker.FindChest(topLeft.X,topLeft.Y);
-			if(chestNo != -1)
+			int chestNo = Common.AutoStacker.FindChest(topLeft.X, topLeft.Y);
+			if (chestNo != -1)
 			{
 				//stack item
 				for (int slot = 0; slot < Main.chest[chestNo].item.Length; slot++)
 				{
-					if (Main.chest[chestNo].item[slot].stack==0)
+					if (Main.chest[chestNo].item[slot].stack == 0)
 					{
 						Main.chest[chestNo].item[slot] = item.Clone();
 						item.SetDefaults(0, true);
 						Wiring.TripWire(topLeft.X, topLeft.Y, 2, 2);
 						return true;
 					}
-					
+
 					Item chestItem = Main.chest[chestNo].item[slot];
 					if (item.IsTheSameAs(chestItem) && chestItem.stack < chestItem.maxStack)
 					{
@@ -87,27 +95,25 @@ namespace AutoStacker.GlobalItems
 							Wiring.TripWire(topLeft.X, topLeft.Y, 2, 2);
 							return true;
 						}
-						else
-						{
-							item.stack -= spaceLeft;
-							chestItem.stack = chestItem.maxStack;
-						}
+
+						item.stack -= spaceLeft;
+						chestItem.stack = chestItem.maxStack;
 					}
 				}
 			}
-			
+
 			//storage heart
-			else if(AutoStacker.modMagicStorage != null || AutoStacker.modMagicStorageExtra != null)
+			else if (AutoStacker.MagicStorageLoaded)
 			{
-				Common.MagicStorageConnecter.InjectItem(topLeft, item);
-				if(item.stack == 0)
+				MagicStorageConnecter.InjectItem(topLeft, item);
+				if (item.stack == 0)
 				{
 					item.SetDefaults(0, true);
 					return true;
 				}
 			}
+
 			return false;
 		}
 	}
 }
-

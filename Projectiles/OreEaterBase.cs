@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using AutoStacker.Players;
 using Terraria;
+using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -10,63 +12,61 @@ namespace AutoStacker.Projectiles
 {
 	public class OreEaterBase : ModProjectile
 	{
-		string displayName="Ore Eater Base";
+		private const int FadeInTicks = 30;
+		private const int FullBrightTicks = 2;
+		private const int FadeOutTicks = 30;
+		private const int Range = 10;
+		private readonly string _displayName = "Ore Eater Base";
+		private int _rangeHypoteneus = (int)Math.Sqrt(Range * Range + Range * Range);
+
+		private int _originX;
+		private int _originY;
+
+		private int _routeCount = -1;
+		private int _routeCountShift;
+
+		public int MaxSerchNum = 60;
+		private int _prevLoop;
+		private int _chestID = -1;
+		private int _targetPrev = 4;
+
+		public int Speed = 16 * 3;
+		public float Light = 0f;
+
 		public override void SetStaticDefaults()
 		{
-			DisplayName.SetDefault(displayName);
-			Main.projFrames[projectile.type] = 1;
-			Main.projPet[projectile.type] = true;
-			ProjectileID.Sets.TrailingMode[projectile.type] = 2;
+			DisplayName.SetDefault(_displayName);
+			Main.projFrames[Type] = 1;
+			Main.projPet[Type] = true;
+			ProjectileID.Sets.TrailingMode[Type] = 2;
 		}
-		
+
 		public override void SetDefaults()
 		{
-			projectile.width = 30;
-			projectile.height = 30;
-			projectile.penetrate = -1;
-			projectile.netImportant = true;
-			projectile.timeLeft *= 5;
-			projectile.friendly = true;
-			projectile.ignoreWater = true;
-			projectile.scale = 0.8f;
-			projectile.tileCollide = false;
+			Projectile.width = 30;
+			Projectile.height = 30;
+			Projectile.penetrate = -1;
+			Projectile.netImportant = true;
+			Projectile.timeLeft *= 5;
+			Projectile.friendly = true;
+			Projectile.ignoreWater = true;
+			Projectile.scale = 0.8f;
+			Projectile.tileCollide = false;
 		}
-		
-		const int fadeInTicks = 30;
-		const int fullBrightTicks = 2;
-		const int fadeOutTicks = 30;
-		const int range = 10;
-		int rangeHypoteneus = (int)Math.Sqrt(range * range + range * range);
-		
-		int originX=0;
-		int originY=0;
-		
-		int route_count = -1;
-		int route_count_shift = 0;
-		
-		
-		public int maxSerchNum=60;
-		System.Random rand = new System.Random();
-		int prevLoop=0;
-		int chestID = -1;
-		int targetPrev=4;
-		
-		public int speed = 16*3;
-		public float light = 0f;
-		
+
 		public override ModProjectile Clone()
 		{
-			OreEaterBase newInstance=(OreEaterBase)base.MemberwiseClone();
-			newInstance.originX=this.originX;
-			newInstance.originY=this.originY;
-			newInstance.route_count=this.route_count;
-			newInstance.route_count_shift=this.route_count_shift;
-			newInstance.prevLoop=this.prevLoop;
-			newInstance.targetPrev=this.targetPrev;
-			
-			return (ModProjectile)newInstance;
+			OreEaterBase newInstance = (OreEaterBase)MemberwiseClone();
+			newInstance._originX = _originX;
+			newInstance._originY = _originY;
+			newInstance._routeCount = _routeCount;
+			newInstance._routeCountShift = _routeCountShift;
+			newInstance._prevLoop = _prevLoop;
+			newInstance._targetPrev = _targetPrev;
+
+			return newInstance;
 		}
-		
+
 		//public override void AI()
 		//{
 		//	if(!Terraria.Program.LoadedEverything )//&& Terraria.Main.tilesLoaded))
@@ -84,737 +84,537 @@ namespace AutoStacker.Projectiles
 		//	AI2(player, modPlayer, modPlayer.pet);
 		//	
 		//}
-		
-		public void AI2(Player player, Players.OreEater modPlayer, PetBase pet)
+
+		public void AI2(Player player, OreEater modPlayer, PetBase pet)
 		{
-			pet.delayLoad();
-			
+			pet.DelayLoad();
+
 			if (!player.active)
 			{
-				Main.npc[modPlayer.index].active=false;
-				projectile.active = false;
-				pet.initListA();
-				pet.routeListX.Clear();
-				pet.routeListY.Clear();
-				projectile.position=player.position;
+				Main.npc[modPlayer.Index].active = false;
+				Projectile.active = false;
+				pet.InitListA();
+				pet.RouteListX.Clear();
+				pet.RouteListY.Clear();
+				Projectile.position = player.position;
 				return;
 			}
-			
+
 			if (player.dead)
+				modPlayer.OreEaterEnable = false;
+
+			if (modPlayer.OreEaterEnable)
 			{
-				modPlayer.oreEaterEnable = false;
-			}
-			
-			if (modPlayer.oreEaterEnable)
-			{
-				projectile.timeLeft = 2;
+				Projectile.timeLeft = 2;
 			}
 			else
 			{
 				modPlayer.ResetEffects();
-				Main.npc[modPlayer.index].active=false;
-				pet.initListA();
-				pet.routeListX.Clear();
-				pet.routeListY.Clear();
-				projectile.position=player.position;
+				Main.npc[modPlayer.Index].active = false;
+				pet.InitListA();
+				pet.RouteListX.Clear();
+				pet.RouteListY.Clear();
+				Projectile.position = player.position;
 			}
-			
+
 			//scan pickel
 			int pickPower = Main.LocalPlayer.inventory.Max(item => item.pick);
-			if( pickPower <= 1)
-			{
+			if (pickPower <= 1)
 				pickPower = 1;
-			}
-			
-			int pickSpeed ;
-			if(Main.LocalPlayer.inventory.Where(item => item.pick > 0).Count() == 0)
-			{
+
+			int pickSpeed;
+			if (!Main.LocalPlayer.inventory.Any(item => item.pick > 0))
 				pickSpeed = 30;
-			}
 			else
-			{
 				pickSpeed = Main.LocalPlayer.inventory.Where(item => item.pick > 0).Min(item => item.useTime);
-			}
-			if( pickSpeed <= 1)
-			{
+			if (pickSpeed <= 1)
 				pickSpeed = 1;
-			}
-			
-			
+
+
 			//light
-			Lighting.AddLight(projectile.position, 0.9f * light, 0.1f * light, 0.3f * light);
-			
-			
+			Lighting.AddLight(Projectile.position, 0.9f * Light, 0.1f * Light, 0.3f * Light);
+
+
 			//ore scan & move & pick 
-			if(!pet.statusAIndex.ContainsKey(3) && !pet.statusAIndex.ContainsKey(4) )
+			if (!pet.StatusAIndex.ContainsKey(3) && !pet.StatusAIndex.ContainsKey(4))
 			{
-				if(pet.latestLoop >= maxSerchNum || prevLoop == pet.latestLoop || pet.statusA.Count == 0 )
+				if (pet.LatestLoop >= MaxSerchNum || _prevLoop == pet.LatestLoop || pet.StatusA.Count == 0)
 				{
-					if(pet.latestLoop >= maxSerchNum || prevLoop == pet.latestLoop)
-					//if(prevLoop == pet.latestLoop)
+					if (pet.LatestLoop >= MaxSerchNum || _prevLoop == pet.LatestLoop)
+						//if(prevLoop == pet.latestLoop)
 					{
-						projectile.position=player.position;
-						modPlayer.npc.position=projectile.position;
+						Projectile.position = player.position;
+						modPlayer.NPC.position = Projectile.position;
 					}
-					originX=(int)projectile.position.X/16;
-					originY=(int)projectile.position.Y/16;
-					prevLoop=0;
-					route_count_shift=0;
-					pet.serchA(originX,originY , 12, 2, 3, pickPower, true);
+
+					_originX = (int)Projectile.position.X / 16;
+					_originY = (int)Projectile.position.Y / 16;
+					_prevLoop = 0;
+					_routeCountShift = 0;
+					pet.SerchA(_originX, _originY, 12, 2, 3, pickPower, true);
 				}
 				else
 				{
-					prevLoop=pet.latestLoop;
-					pet.serchA(originX,originY , 1, 1, 3, pickPower, false);
-					pet.serchA(originX,originY , 2, 1, 3, pickPower, false);
+					_prevLoop = pet.LatestLoop;
+					pet.SerchA(_originX, _originY, 1, 1, 3, pickPower);
+					pet.SerchA(_originX, _originY, 2, 1, 3, pickPower);
 				}
 			}
 			else
 			{
-				int target=-1;
-				if(pet.statusAIndex.ContainsKey(3) )
-				{
-					target=3;
-				}
-				else if(pet.statusAIndex.ContainsKey(4) )
-				{
-					target=4;
-				}
+				int target = -1;
+				if (pet.StatusAIndex.ContainsKey(3))
+					target = 3;
+				else if (pet.StatusAIndex.ContainsKey(4))
+					target = 4;
 				else
-				{
 					return;
-				}
-				
+
 				//makeRoute
-				if(route_count == -1)
+				if (_routeCount == -1)
 				{
-					pet.makeRoute(target, 0, maxSerchNum);
-					route_count=pet.routeListX.Count -1;
-					if(target==4)
+					pet.MakeRoute(target, 0, MaxSerchNum);
+					_routeCount = pet.RouteListX.Count - 1;
+					if (target == 4)
 					{
-						route_count = route_count - route_count_shift;
-						route_count_shift=route_count;
+						_routeCount = _routeCount - _routeCountShift;
+						_routeCountShift = _routeCount;
 					}
 				}
-				
+
 				//set velocity
-				projectile.velocity.X = pet.routeListX[route_count]*16 - projectile.position.X -8;
-				projectile.velocity.Y = pet.routeListY[route_count]*16 - projectile.position.Y -8;
-				modPlayer.npc.position=projectile.position;
-				
+				Projectile.velocity.X = pet.RouteListX[_routeCount] * 16 - Projectile.position.X - 8;
+				Projectile.velocity.Y = pet.RouteListY[_routeCount] * 16 - Projectile.position.Y - 8;
+				modPlayer.NPC.position = Projectile.position;
+
 				//next cell
-				if(route_count >= 0 && rand.Next( route_count * pickSpeed) <= speed )
-				{
-					route_count -= 1;
-				}
-				
-				
+				if (_routeCount >= 0 && Main.rand.Next(_routeCount * pickSpeed) <= Speed)
+					_routeCount -= 1;
+
+
 				//end route
-				if(route_count == -1)
+				if (_routeCount == -1)
 				{
-					projectile.position.X=pet.routeListX[0]*16;
-					projectile.position.Y=pet.routeListY[0]*16;
-					projectile.velocity.X = 0;
-					projectile.velocity.Y = 0;
-					if(target == 3)
+					Projectile.position.X = pet.RouteListX[0] * 16;
+					Projectile.position.Y = pet.RouteListY[0] * 16;
+					Projectile.velocity.X = 0;
+					Projectile.velocity.Y = 0;
+					if (target == 3)
 					{
-						modPlayer.player.PickTile(pet.AX[pet.statusAIndex[3][0]], pet.AY[pet.statusAIndex[3][0]], pickPower);
-						pet.initListA();
-						pet.routeListX.Clear();
-						pet.routeListY.Clear();
-						targetPrev=3;
+						modPlayer.Player.PickTile(pet.Ax[pet.StatusAIndex[3][0]], pet.Ay[pet.StatusAIndex[3][0]], pickPower);
+						pet.InitListA();
+						pet.RouteListX.Clear();
+						pet.RouteListY.Clear();
+						_targetPrev = 3;
 					}
 					else
 					{
-						if(targetPrev==3)
+						if (_targetPrev == 3)
 						{
-							pet.initListA();
-							pet.routeListX.Clear();
-							pet.routeListY.Clear();
+							pet.InitListA();
+							pet.RouteListX.Clear();
+							pet.RouteListY.Clear();
 						}
 						else
 						{
-							pet.statusA[pet.statusAIndex[4][0]]=5;
+							pet.StatusA[pet.StatusAIndex[4][0]] = 5;
 							pet.make_statusAIndex();
 						}
-						targetPrev=4;
+
+						_targetPrev = 4;
 					}
 				}
 			}
-			modPlayer.npc.life=modPlayer.npc.lifeMax;
+
+			modPlayer.NPC.life = modPlayer.NPC.lifeMax;
 		}
 	}
-	
+
 	public class PetBase
 	{
+		private static readonly Regex OreRegex = new("Ore$|OreTile$", RegexOptions.Compiled);
+		private static Regex _gemRegex = new("^Large", RegexOptions.Compiled);
+		private static int _tileId;
+		private static Dictionary<int, bool> _oreTile = new();
+
+		private readonly double _root2 = Math.Sqrt(2);
+		private Item _item = new();
+		public int LatestLoop;
+
+		public List<int> RouteListX = new();
+		public List<int> RouteListY = new();
+
+		public List<List<int>> PetDictionaryAInv { get; } = new();
+
+		public Dictionary<int, Dictionary<int, int>> PetDictionaryA { get; } = new();
+
+		public List<int> Ax { get; } = new();
+
+		public List<int> Ay { get; } = new();
+
+		public List<int> StatusA { get; } = new();
+
+		public List<int> RouteAx { get; } = new();
+
+		public List<int> RouteAy { get; } = new();
+
+		public List<double> NA { get; } = new();
+
+		public Dictionary<int, List<int>> StatusAIndex { get; set; } = new();
+
+		public Dictionary<int, bool> OreTile
+		{
+			get => _oreTile;
+			set => _oreTile = value;
+		}
+
 		public PetBase()
 		{
-			initListA();
+			InitListA();
 			make_statusAIndex();
-			
 		}
-		
-		private static Regex oreRegex =new Regex("Ore$|OreTile$",RegexOptions.Compiled);
-		private static Regex gemRegex =new Regex("^Large",RegexOptions.Compiled);
-		private static int _tileId = 0;
-		private static Dictionary<int,bool> _oreTile = new Dictionary<int,bool>();
-		Item _item = new Item();
-		
-		public void delayLoad()
+
+		public void DelayLoad()
 		{
-			if(_tileId == 0)
+			if (_tileId == 0)
 			{
 				Main.NewText("AutoStacker[Ore Eater]:Item data loading...");
-				_oreTile[TileID.ExposedGems] =true;
-				_oreTile[TileID.Sapphire] =true;
-				_oreTile[TileID.Ruby] =true;
-				_oreTile[TileID.Emerald] =true;
-				_oreTile[TileID.Topaz] =true;
-				_oreTile[TileID.Amethyst] =true;
-				_oreTile[TileID.Diamond] =true;
-				_oreTile[TileID.Crystals] =true;
-				_oreTile[TileID.Heart] =true;
-				_oreTile[TileID.LifeFruit] =true;
-				_oreTile[TileID.Pots] =true;
-				_oreTile[TileID.Cobweb] =true;
-				_oreTile[TileID.Obsidian] =true;
+				_oreTile[TileID.ExposedGems] = true;
+				_oreTile[TileID.Sapphire] = true;
+				_oreTile[TileID.Ruby] = true;
+				_oreTile[TileID.Emerald] = true;
+				_oreTile[TileID.Topaz] = true;
+				_oreTile[TileID.Amethyst] = true;
+				_oreTile[TileID.Diamond] = true;
+				_oreTile[TileID.Crystals] = true;
+				_oreTile[TileID.Heart] = true;
+				_oreTile[TileID.LifeFruit] = true;
+				_oreTile[TileID.Pots] = true;
+				_oreTile[TileID.Cobweb] = true;
+				_oreTile[TileID.Obsidian] = true;
 			}
-			
-			if(_tileId < Main.tileTexture.Length)
+
+			if (_tileId < TextureAssets.Tile.Length)
 			{
-				ModTile _tile = TileLoader.GetTile(_tileId);
-				if(
-					Terraria.ID.TileID.Sets.Ore[_tileId]
-					||(_tile != null && _tile.Name != null && oreRegex.IsMatch(_tile.Name) )
+				ModTile tile = TileLoader.GetTile(_tileId);
+				if (
+					TileID.Sets.Ore[_tileId] || tile != null && tile.Name != null && OreRegex.IsMatch(tile.Name)
 				)
-				{
-					_oreTile[_tileId] =true;
-				}
+					_oreTile[_tileId] = true;
 				_tileId += 1;
-				if(_tileId == Main.tileTexture.Length)
-				{
+				if (_tileId == TextureAssets.Tile.Length)
 					//Main.recipe.Where( recipe => recipe.createItem.modItem != null && recipe.createItem.modItem.DisplayName != null && gemRegex.IsMatch( recipe.createItem.modItem.DisplayName.GetDefault() )).SelectMany( recipe => recipe.requiredItem ).Where(item => item.createTile != null && item.createTile != -1 ).Any(item => _oreTile[item.createTile] = true );
 					Main.NewText("AutoStacker[Ore Eater]: Item data loading Complete!");
-				}
 			}
 		}
-		
-		private Dictionary<int,Dictionary<int,int>> _petDictionaryA    = new Dictionary<int,Dictionary<int,int>>();
-		private List<List<int>>                     _petDictionaryAInv = new List<List<int>>();
-		
-		private List<int>                           _AX                = new List<int>();
-		private List<int>                           _AY                = new List<int>();
-		private List<int>                           _statusA           = new List<int>();
-		private List<int>                           _routeAX           = new List<int>();
-		private List<int>                           _routeAY           = new List<int>();
-		private List<double>                        _nA                = new List<double>();
-		
-		
-		private double                              root2              = Math.Sqrt(2);
-		public  int                                 latestLoop         = 0;
-		
-		private Dictionary<int,List<int>>           _statusAIndex      = new Dictionary<int,List<int>>();
-		
-		
-		public List<List<int>> petDictionaryAInv
+
+		public void SerchA(int originX, int originY, int serchTiles, int resultMaxNum, int resultMaxStatus, int pickPower, bool reset = false)
 		{
-			get
+			if (reset)
 			{
-				return _petDictionaryAInv;
+				InitListA();
+				LatestLoop = 0;
 			}
-		}
-		
-		public Dictionary<int,Dictionary<int,int>> petDictionaryA
-		{
-			get
-			{
-				return _petDictionaryA;
-			}
-		}
-		
-		public List<int> AX
-		{
-			get
-			{
-				return _AX;
-			}
-		}
-		
-		public List<int> AY
-		{
-			get
-			{
-				return _AY;
-			}
-		}
-		
-		public List<int> statusA
-		{
-			get
-			{
-				return _statusA;
-			}
-		}
-		
-		
-		public List<int> routeAX
-		{
-			get
-			{
-				return _routeAX;
-			}
-		}
-		
-		public List<int> routeAY
-		{
-			get
-			{
-				return _routeAY;
-			}
-		}
-		
-		public List<double> nA
-		{
-			get
-			{
-				return _nA;
-			}
-		}
-		
-		public Dictionary<int,List<int>> statusAIndex
-		{
-			get
-			{
-				return _statusAIndex;
-			}
-			set
-			{
-				_statusAIndex=value;
-			}
-		}
-		
-		public Dictionary<int,bool> oreTile
-		{
-			get
-			{
-				return _oreTile;
-			}
-			set
-			{
-				_oreTile=value;
-			}
-		}
-		
-		
-		public void serchA(int originX, int originY, int serchTiles,int resultMaxNum, int resultMaxStatus, int pickPower, bool reset=false)
-		{
-			if(reset)
-			{
-				initListA();
-				latestLoop = 0;
-			}
-			
-			if(serchTiles <= 0)
-			{
+
+			if (serchTiles <= 0)
 				return;
-			}
-			if( !_petDictionaryA.ContainsKey(originX) || !_petDictionaryA[originX].ContainsKey(originY) )
+			if (!PetDictionaryA.ContainsKey(originX) || !PetDictionaryA[originX].ContainsKey(originY))
 			{
-				addListA(originX, originY, 0, originX, originY, 0);
+				AddListA(originX, originY, 0, originX, originY, 0);
 				make_statusAIndex();
 			}
-			
-			if( !_statusAIndex.ContainsKey(0) && !_statusAIndex.ContainsKey(1))
-			{
+
+			if (!StatusAIndex.ContainsKey(0) && !StatusAIndex.ContainsKey(1))
 				return;
-			}
-			
-			if(_statusAIndex.ContainsKey(resultMaxStatus) && statusAIndex[resultMaxStatus].Count >= resultMaxNum)
-			{
+
+			if (StatusAIndex.ContainsKey(resultMaxStatus) && StatusAIndex[resultMaxStatus].Count >= resultMaxNum)
 				return;
-			}
-			
+
 			//fined next tile
-			if(_statusAIndex.ContainsKey(0))
-			{
-				foreach(int index in _statusAIndex[0])
+			if (StatusAIndex.ContainsKey(0))
+				foreach (int index in StatusAIndex[0])
 				{
-					int x=_AX[index];
-					int y=_AY[index];
-					for(int dX=-1; dX <= 1; dX++)
+					int x = Ax[index];
+					int y = Ay[index];
+					for (int dX = -1; dX <= 1; dX++)
+					for (int dY = -1; dY <= 1; dY++)
 					{
-						for(int dY=-1; dY <= 1; dY++ )
-						{
-							if(dY == 0 && dX == 0)
-							{
-								continue;
-							}
-							
-							if(checkCanMove(index, dX, dY, pickPower)) 
-							{
-								addListA(x + dX, y + dY, 0, x, y, int.MaxValue );
-							}
-						}
+						if (dY == 0 && dX == 0)
+							continue;
+
+						if (CheckCanMove(index, dX, dY, pickPower))
+							AddListA(x + dX, y + dY, 0, x, y, int.MaxValue);
 					}
-					_statusA[index] = 1;
+
+					StatusA[index] = 1;
 				}
-			}
-			
+
 			//find row cost route
-			if(_statusAIndex.ContainsKey(1))
-			{
-				foreach(int index in _statusAIndex[1])
+			if (StatusAIndex.ContainsKey(1))
+				foreach (int index in StatusAIndex[1])
 				{
-					double cur = _nA[index];
-					int x=_AX[index];
-					int y=_AY[index];
-					for(int dX=-1; dX <= 1; dX++)
+					double cur = NA[index];
+					int x = Ax[index];
+					int y = Ay[index];
+					for (int dX = -1; dX <= 1; dX++)
+					for (int dY = -1; dY <= 1; dY++)
 					{
-						for(int dY=-1; dY <= 1; dY++ )
+						if (
+							dY == 0 && dX == 0 ||
+							!PetDictionaryA.ContainsKey(x + dX) ||
+							!PetDictionaryA[x + dX].ContainsKey(y + dY) ||
+							StatusA[PetDictionaryA[x + dX][y + dY]] != 0 &&
+							StatusA[PetDictionaryA[x + dX][y + dY]] != 1 &&
+							StatusA[PetDictionaryA[x + dX][y + dY]] != 2
+						)
+							continue;
+						double match;
+						if (dX == 0 || dY == 0)
+							match = NA[PetDictionaryA[x + dX][y + dY]] + 1d;
+						else
+							match = NA[PetDictionaryA[x + dX][y + dY]] + _root2;
+
+						if (match < cur)
 						{
-							if(
-								(dY == 0 && dX == 0)
-								|| !_petDictionaryA.ContainsKey(x + dX)
-								|| !_petDictionaryA[x + dX].ContainsKey(y + dY)
-								||
-								(
-									_statusA[_petDictionaryA[x + dX][y + dY]] != 0
-									&& _statusA[_petDictionaryA[x + dX][y + dY]] != 1
-									&& _statusA[_petDictionaryA[x + dX][y + dY]] != 2
-								)
-							)
-							{
-								continue;
-							}
-							double match;
-							if(dX ==0 || dY ==0)
-							{
-								match = _nA[_petDictionaryA[x + dX][y + dY]] + 1d;
-							}
-							else
-							{
-								match = _nA[_petDictionaryA[x + dX][y + dY]] + root2;
-							}
-							
-							if(match < cur)
-							{
-								_nA[index]=match;
-								cur=match;
-								_routeAX[index] = x + dX;
-								_routeAY[index] = y + dY;
-							}
+							NA[index] = match;
+							cur = match;
+							RouteAx[index] = x + dX;
+							RouteAy[index] = y + dY;
 						}
 					}
-					_statusA[index] = 2;
+
+					StatusA[index] = 2;
 				}
-			}
-			
+
 			//find player, ores...
-			if(_statusAIndex.ContainsKey(2))
-			{
-				foreach(int index in _statusAIndex[2])
-				{
-					if(checkCanPick(index, pickPower))
-					{
-						_statusA[index] = 3;
-					}
+			if (StatusAIndex.ContainsKey(2))
+				foreach (int index in StatusAIndex[2])
+					if (CheckCanPick(index, pickPower))
+						StatusA[index] = 3;
 					else if
 					(
-						_AX[index] == (int)(Main.LocalPlayer.position.X / 16 )
-						&& _AY[index] == (int)(Main.LocalPlayer.position.Y /16 ) //-4)
+						Ax[index] == (int)(Main.LocalPlayer.position.X / 16) && Ay[index] == (int)(Main.LocalPlayer.position.Y / 16) //-4)
 					)
-					{
-						_statusA[index] = 4;
-					}
+						StatusA[index] = 4;
 					else
-					{
-						_statusA[index] = 5;
-					}
-				}
-			}
-			
+						StatusA[index] = 5;
+
 			make_statusAIndex();
-			latestLoop += 1;
-			serchA(originX, originY, serchTiles -1 ,resultMaxNum, resultMaxStatus, pickPower, false );
-			
+			LatestLoop += 1;
+			SerchA(originX, originY, serchTiles - 1, resultMaxNum, resultMaxStatus, pickPower);
 		}
-		
-		public virtual bool checkCanMove(int index, int dX, int dY,int pickPower)
+
+		public virtual bool CheckCanMove(int index, int dX, int dY, int pickPower)
 		{
-			Tile tile = Main.tile[_AX[index], _AY[index]];
-			if
-			(
-				(
-					!_petDictionaryA.ContainsKey(_AX[index] + dX) 
-					|| !_petDictionaryA[_AX[index] + dX].ContainsKey(_AY[index] + dY) 
-				)
-				&& _AX[index] + dX < Main.Map.MaxWidth
-				&& _AX[index] + dX > 1
-				&& _AY[index] + dY < Main.Map.MaxHeight
-				&& _AY[index] + dY > 1
-				&& Main.Map.IsRevealed(_AX[index] + dX,_AY[index] + dY)
-				&&
-				(
-					tile == null 
-					||
-					(
-						tile != null 
-						&&
-						(
-							!tile.active()
-							||
-							(
-								tile.active() 
-								&& _oreTile.ContainsKey(tile.type)
-							)
-						)
-					)
-				)
-			)
-			{
-			}
-			else
-			{
+			Tile tile = Main.tile[Ax[index], Ay[index]];
+			if (PetDictionaryA.ContainsKey(Ax[index] + dX) && PetDictionaryA[Ax[index] + dX].ContainsKey(Ay[index] + dY) ||
+				Ax[index] + dX >= Main.Map.MaxWidth ||
+				Ax[index] + dX <= 1 ||
+				Ay[index] + dY >= Main.Map.MaxHeight ||
+				Ay[index] + dY <= 1 ||
+				!Main.Map.IsRevealed(Ax[index] + dX, Ay[index] + dY) ||
+				tile != null && tile.IsActive && (!tile.IsActive || !_oreTile.ContainsKey(tile.type)))
 				return false;
-			}
 
-			if ((tile.type == 211 && pickPower <= 200)
-				|| ((tile.type == 25 || tile.type == 203) && pickPower <= 65)
-				|| (tile.type == 117 && pickPower <= 65)
-				|| (tile.type == 37 && pickPower <= 50)
-				|| (tile.type == 404 && pickPower <= 65)
+			if (tile.type == TileID.Chlorophyte && pickPower <= 200 ||
+				(tile.type == TileID.Ebonstone || tile.type == TileID.Crimstone) && pickPower <= 65 ||
+				tile.type == TileID.Pearlstone && pickPower <= 65 ||
+				tile.type == TileID.Meteorite && pickPower <= 50 ||
+				tile.type == TileID.DesertFossil && pickPower <= 65
 				//|| ((tile.type == 22 || tile.type == 204) && (double)_AY[index] > Main.worldSurface && pickPower <= 55)
-				|| (tile.type == 56 && pickPower <= 65)
-				|| (tile.type == 58 && pickPower <= 65)
-				|| ((tile.type == 226 || tile.type == 237) && pickPower <= 210)
-				|| (Main.tileDungeon[tile.type] && pickPower <= 65)
+				||
+				tile.type == TileID.Obsidian && pickPower <= 65 ||
+				tile.type == TileID.Hellstone && pickPower <= 65 ||
+				(tile.type == TileID.LihzahrdBrick || tile.type == TileID.LihzahrdAltar) && pickPower <= 210 ||
+				Main.tileDungeon[tile.type] && pickPower <= 65
 				//|| ((double)_AX[index] < (double)Main.maxTilesX * 0.35 || (double)_AX[index] > (double)Main.maxTilesX * 0.65)
-				|| (tile.type == 107 && pickPower <= 100)
-				|| (tile.type == 108 && pickPower <= 110)
-				|| (tile.type == 111 && pickPower <= 150)
-				|| (tile.type == 221 && pickPower <= 100)
-				|| (tile.type == 222 && pickPower <= 110)
-				|| (tile.type == 223 && pickPower <= 150)
+				||
+				tile.type == TileID.Cobalt && pickPower <= 100 ||
+				tile.type == TileID.Mythril && pickPower <= 110 ||
+				tile.type == TileID.Adamantite && pickPower <= 150 ||
+				tile.type == TileID.Palladium && pickPower <= 100 ||
+				tile.type == TileID.Orichalcum && pickPower <= 110 ||
+				tile.type == TileID.Titanium && pickPower <= 150
 			)
-			{
 				return false;
-			}
 
-			int check=1;
+			int check = 1;
 			TileLoader.PickPowerCheck(tile, pickPower, ref check);
-			if(check == 0)
-			{
+			if (check == 0)
 				return false;
-			}
-			
+
 			return true;
 		}
-		
-		private bool checkCanPick(int index, int pickPower)
-		{
-			if(index >= _AX.Count || index >= _AY.Count || index <= -1)
-			{
-				return false;
-			}
-			
-			Tile tile = Main.tile[_AX[index], _AY[index]];
-			Tile tileUpper = Main.tile[_AX[index], _AY[index]-1];
 
-			if(tile == null )
-			{
+		private bool CheckCanPick(int index, int pickPower)
+		{
+			if (index >= Ax.Count || index >= Ay.Count || index <= -1)
 				return false;
-			}
+
+			Tile tile = Main.tile[Ax[index], Ay[index]];
+			Tile tileUpper = Main.tile[Ax[index], Ay[index] - 1];
+
+			if (tile == null)
+				return false;
 
 			//_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
-			if ((tile.type == 211 && pickPower <= 200)
-				|| ((tile.type == 25 || tile.type == 203) && pickPower <= 65)
-				|| (tile.type == 117 && pickPower <= 65)
-				|| (tile.type == 37 && pickPower <= 50)
-				|| (tile.type == 404 && pickPower <= 65)
+			if (tile.type == TileID.Chlorophyte && pickPower <= 200 ||
+				(tile.type == TileID.Ebonstone || tile.type == TileID.Crimstone) && pickPower <= 65 ||
+				tile.type == TileID.Pearlstone && pickPower <= 65 ||
+				tile.type == TileID.Meteorite && pickPower <= 50 ||
+				tile.type == TileID.DesertFossil && pickPower <= 65
 //				|| ((tile.type == 22 || tile.type == 204) && (double)_AY[index] > Main.worldSurface && pickPower < 55)
-				|| (tile.type == 56 && pickPower <= 65)
-				|| (tile.type == 58 && pickPower <= 65)
-				|| ((tile.type == 226 || tile.type == 237) && pickPower <= 210)
-				|| (Main.tileDungeon[tile.type] && pickPower <= 65)
+				||
+				tile.type == TileID.Obsidian && pickPower <= 65 ||
+				tile.type == TileID.Hellstone && pickPower <= 65 ||
+				(tile.type == TileID.LihzahrdBrick || tile.type == TileID.LihzahrdAltar) && pickPower <= 210 ||
+				Main.tileDungeon[tile.type] && pickPower <= 65
 //				|| ((double)_AX[index] < (double)Main.maxTilesX * 0.35 || (double)_AX[index] > (double)Main.maxTilesX * 0.65)
-				|| (tile.type == 107 && pickPower <= 100)
-				|| (tile.type == 108 && pickPower <= 110)
-				|| (tile.type == 111 && pickPower <= 150)
-				|| (tile.type == 221 && pickPower <= 100)
-				|| (tile.type == 222 && pickPower <= 110)
-				|| (tile.type == 223 && pickPower <= 150)
+				||
+				tile.type == TileID.Cobalt && pickPower <= 100 ||
+				tile.type == TileID.Mythril && pickPower <= 110 ||
+				tile.type == TileID.Adamantite && pickPower <= 150 ||
+				tile.type == TileID.Palladium && pickPower <= 100 ||
+				tile.type == TileID.Orichalcum && pickPower <= 110 ||
+				tile.type == TileID.Titanium && pickPower <= 150
 			)
-			{
 				return false;
-			}
 
-			int check=1;
+			int check = 1;
 			TileLoader.PickPowerCheck(tile, pickPower, ref check);
-			if(check == 0)
-			{
+			if (check == 0)
 				return false;
-			}
 			//_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
 
 			if (
-				tile.active() 
-				&& _oreTile.ContainsKey(tile.type) 
-				&&
+				tile.IsActive &&
+				_oreTile.ContainsKey(tile.type) &&
 				(
-					tileUpper ==  null
-					||
-					(
-						tileUpper.type != TileID.Containers
-						&&tileUpper.type != TileID.DemonAltar
-					)
+					tileUpper == null ||
+					tileUpper.type != TileID.Containers && tileUpper.type != TileID.DemonAltar
 				)
 			)
-			{
 				return true;
-			}
-			else
-			{
-				return false;
-			}
+			return false;
 		}
-		
-		public List<int> routeListX = new List<int>();
-		public List<int> routeListY = new List<int>();
-		public void makeRoute(int status,int routeNo, int maxSerchNum)
+
+		public void MakeRoute(int status, int routeNo, int maxSerchNum)
 		{
-			routeListX.Clear();
-			routeListY.Clear();
-			if(_statusAIndex.ContainsKey(status) && _statusAIndex[status].Count > routeNo)
+			RouteListX.Clear();
+			RouteListY.Clear();
+			if (StatusAIndex.ContainsKey(status) && StatusAIndex[status].Count > routeNo)
 			{
-				routeListX.Add(_AX[_statusAIndex[status][routeNo]]);
-				routeListY.Add(_AY[_statusAIndex[status][routeNo]]);
-				for(int count=0; count <= maxSerchNum;count ++)
+				RouteListX.Add(Ax[StatusAIndex[status][routeNo]]);
+				RouteListY.Add(Ay[StatusAIndex[status][routeNo]]);
+				for (int count = 0; count <= maxSerchNum; count++)
 				{
-					int x=routeListX[routeListX.Count-1];
-					int y=routeListY[routeListY.Count-1];
-					
-					if(
-						!_petDictionaryA.ContainsKey(x)
-						|| !_petDictionaryA[x].ContainsKey(y)
+					int x = RouteListX[RouteListX.Count - 1];
+					int y = RouteListY[RouteListY.Count - 1];
+
+					if (
+						!PetDictionaryA.ContainsKey(x) || !PetDictionaryA[x].ContainsKey(y)
 					)
 					{
-						initListA();
-						routeListX.Clear();
-						routeListY.Clear();
+						InitListA();
+						RouteListX.Clear();
+						RouteListY.Clear();
 						break;
 					}
-					
+
 					{
-						routeListX.Add( _routeAX[_petDictionaryA[x][y]] );
-						routeListY.Add( _routeAY[_petDictionaryA[x][y]] );
-					
-						if(_nA[_petDictionaryA[routeListX[routeListX.Count-1]][routeListY[routeListY.Count-1]]] == 0)
-						{
+						RouteListX.Add(RouteAx[PetDictionaryA[x][y]]);
+						RouteListY.Add(RouteAy[PetDictionaryA[x][y]]);
+
+						if (NA[PetDictionaryA[RouteListX[RouteListX.Count - 1]][RouteListY[RouteListY.Count - 1]]] == 0)
 							break;
-						}
 					}
 				}
 			}
 		}
-		
-		
-		private void addListA(int x, int y, int status,int routeX,int routeY, double n)
+
+		private void AddListA(int x, int y, int status, int routeX, int routeY, double n)
 		{
-			if(!_petDictionaryA.ContainsKey(x))
+			if (!PetDictionaryA.ContainsKey(x))
+				PetDictionaryA.Add(x, new Dictionary<int, int>());
+
+			if (!PetDictionaryA[x].ContainsKey(y))
 			{
-				_petDictionaryA.Add(x, new Dictionary<int,int>() );
+				PetDictionaryAInv.Insert(StatusA.Count, new List<int>());
+				PetDictionaryAInv[StatusA.Count].Add(x);
+				PetDictionaryAInv[StatusA.Count].Add(y);
+
+				PetDictionaryA[x][y] = StatusA.Count;
+
+				Ax.Add(x);
+				Ay.Add(y);
+				StatusA.Add(status);
+				RouteAx.Add(routeX);
+				RouteAy.Add(routeY);
+				NA.Add(n);
 			}
-			
-			if(!_petDictionaryA[x].ContainsKey(y))
-			{
-				_petDictionaryAInv.Insert( _statusA.Count, new List<int>() );
-				_petDictionaryAInv[_statusA.Count].Add(x);
-				_petDictionaryAInv[_statusA.Count].Add(y);
-				
-				_petDictionaryA[x][y]=_statusA.Count;
-				
-				_AX.Add(x);
-				_AY.Add(y);
-				_statusA.Add(status);
-				_routeAX.Add(routeX);
-				_routeAY.Add(routeY);
-				_nA.Add(n);
-			}
-			
 		}
-		
-		public void initListA()
+
+		public void InitListA()
 		{
-			_AX.Clear();
-			_AY.Clear();
-			_statusA.Clear();
-			_routeAX.Clear();
-			_routeAY.Clear();
-			_nA.Clear();
-			
-			_statusAIndex.Clear();
-			
-			_petDictionaryA.Clear();
-			_petDictionaryAInv.Clear();
-			
+			Ax.Clear();
+			Ay.Clear();
+			StatusA.Clear();
+			RouteAx.Clear();
+			RouteAy.Clear();
+			NA.Clear();
+
+			StatusAIndex.Clear();
+
+			PetDictionaryA.Clear();
+			PetDictionaryAInv.Clear();
+
 			make_statusAIndex();
 		}
-		
-		public void removeListA(int x, int y)
+
+		public void RemoveListA(int x, int y)
 		{
-			if(!_petDictionaryA.ContainsKey(x))
-			{
+			if (!PetDictionaryA.ContainsKey(x))
 				return;
-			}
-			
-			if(!_petDictionaryA[x].ContainsKey(y))
-			{
+
+			if (!PetDictionaryA[x].ContainsKey(y))
 				return;
-			}
-			
-			int removeIndexNo = _petDictionaryA[x][y];
-			int rowNumber = _statusA.Count;
-			
-			_petDictionaryAInv.RemoveAt(removeIndexNo);
-			_petDictionaryA[x].Remove( y );
-			for(int indexNo=removeIndexNo; indexNo < rowNumber -1; indexNo++)
-			{
-				_petDictionaryA[_petDictionaryAInv[indexNo][0]][_petDictionaryAInv[indexNo][1]]--;
-			}
-			
-			_AX.RemoveAt(removeIndexNo);
-			_AY.RemoveAt(removeIndexNo);
-			_statusA.RemoveAt(removeIndexNo);
-			_routeAX.RemoveAt(removeIndexNo);
-			_routeAY.RemoveAt(removeIndexNo);
-			_nA.RemoveAt(removeIndexNo);
-			
+
+			int removeIndexNo = PetDictionaryA[x][y];
+			int rowNumber = StatusA.Count;
+
+			PetDictionaryAInv.RemoveAt(removeIndexNo);
+			PetDictionaryA[x].Remove(y);
+			for (int indexNo = removeIndexNo; indexNo < rowNumber - 1; indexNo++)
+				PetDictionaryA[PetDictionaryAInv[indexNo][0]][PetDictionaryAInv[indexNo][1]]--;
+
+			Ax.RemoveAt(removeIndexNo);
+			Ay.RemoveAt(removeIndexNo);
+			StatusA.RemoveAt(removeIndexNo);
+			RouteAx.RemoveAt(removeIndexNo);
+			RouteAy.RemoveAt(removeIndexNo);
+			NA.RemoveAt(removeIndexNo);
 		}
-		
-		public void removeListA(int index)
+
+		public void RemoveListA(int index)
 		{
-			if( index >= _petDictionaryAInv.Count )
-			{
+			if (index >= PetDictionaryAInv.Count)
 				return;
-			}
-			
-			int x = _petDictionaryAInv[index][0];
-			int y = _petDictionaryAInv[index][1];
-			
-			removeListA(x, y);
+
+			int x = PetDictionaryAInv[index][0];
+			int y = PetDictionaryAInv[index][1];
+
+			RemoveListA(x, y);
 		}
-		
+
 		public void make_statusAIndex()
 		{
-			_statusAIndex.Clear();
-			int rowNo=0;
-			foreach (int status in _statusA)
+			StatusAIndex.Clear();
+			int rowNo = 0;
+			foreach (int status in StatusA)
 			{
-				if(!_statusAIndex.ContainsKey(status))
-				{
-					_statusAIndex[status] = new List<int>();
-				}
-				_statusAIndex[status].Add(rowNo);
+				if (!StatusAIndex.ContainsKey(status))
+					StatusAIndex[status] = new List<int>();
+				StatusAIndex[status].Add(rowNo);
 				rowNo += 1;
 			}
 		}

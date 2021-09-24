@@ -1,55 +1,50 @@
+using AutoStacker.Players;
 using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace AutoStacker.Projectiles
 {
 	public class OreEaterV4 : OreEaterBase
 	{
-		string displayName="Ore Eater Ver.4";
-		
+		private string _displayName = "Ore Eater Ver.4";
+
 		public OreEaterV4()
 		{
-			this.maxSerchNum= 40;
-			this.speed=16 * 5;
-			this.light = 3f;
+			MaxSerchNum = 40;
+			Speed = 16 * 5;
+			Light = 3f;
 		}
-		
+
 		public override void AI()
 		{
-			if(!Terraria.Program.LoadedEverything )
-			{
+			if (!Program.LoadedEverything)
 				return;
-			}
-			
-			Player player = Main.player[projectile.owner];
-			Players.OreEater modPlayer = player.GetModPlayer<Players.OreEater>();
-			
-			if(modPlayer.pet == null)
-			{
-				modPlayer.pet = (PetBase)new PetV4();
-			}
-			AI2(player, modPlayer, (PetBase)modPlayer.pet);
-			
+
+			Player player = Main.player[Projectile.owner];
+			OreEater modPlayer = player.GetModPlayer<OreEater>();
+
+			modPlayer.Pet ??= new PetV4();
+			AI2(player, modPlayer, modPlayer.Pet);
 		}
 	}
-	
+
 	public class PetV4 : PetBase
 	{
-		public override bool checkCanMove(int index, int dX, int dY, int pickPower)
+		public override bool CheckCanMove(int index, int dX, int dY, int pickPower)
 		{
-			Tile tile = Main.tile[AX[index], AY[index]];
-			
+			Tile tile = Main.tile[Ax[index], Ay[index]];
+
 			if
 			(
 				(
-					!petDictionaryA.ContainsKey(AX[index] + dX) 
-					|| !petDictionaryA[AX[index] + dX].ContainsKey(AY[index] + dY) 
-				)
-				&& AX[index] + dX < Main.Map.MaxWidth
-				&& AX[index] + dX > 1
-				&& AY[index] + dY < Main.Map.MaxHeight
-				&& AY[index] + dY > 1
-				&& Main.Map.IsRevealed(AX[index] + dX,AY[index] + dY)
+					!PetDictionaryA.ContainsKey(Ax[index] + dX) || !PetDictionaryA[Ax[index] + dX].ContainsKey(Ay[index] + dY)
+				) &&
+				Ax[index] + dX < Main.Map.MaxWidth &&
+				Ax[index] + dX > 1 &&
+				Ay[index] + dY < Main.Map.MaxHeight &&
+				Ay[index] + dY > 1 &&
+				Main.Map.IsRevealed(Ax[index] + dX, Ay[index] + dY)
 				//&&
 				//(
 				//	tile == null 
@@ -58,10 +53,10 @@ namespace AutoStacker.Projectiles
 				//		tile != null 
 				//		&&
 				//		(
-				//			!tile.active()
+				//			!tile.IsActive
 				//			||
 				//			(
-				//				tile.active()
+				//				tile.IsActive
 				//				&& 
 				//				(
 				//					oreTile.ContainsKey(tile.type)
@@ -79,37 +74,31 @@ namespace AutoStacker.Projectiles
 				return false;
 			}
 
-			if ((tile.type == 211 && pickPower <= 200)
-				|| ((tile.type == 25 || tile.type == 203) && pickPower <= 65)
-				|| (tile.type == 117 && pickPower <= 65)
-				|| (tile.type == 37 && pickPower <= 50)
-				|| (tile.type == 404 && pickPower <= 65)
+			if (tile.type == TileID.Chlorophyte && pickPower <= 200 ||
+				(tile.type == TileID.Ebonstone || tile.type == TileID.Crimstone) && pickPower <= 65 ||
+				tile.type == TileID.Pearlstone && pickPower <= 65 ||
+				tile.type == TileID.Meteorite && pickPower <= 50 ||
+				tile.type == TileID.DesertFossil && pickPower <= 65
 //				|| ((tile.type == 22 || tile.type == 204) && (double)AY[index] > Main.worldSurface && pickPower < 55)
-				|| (tile.type == 56 && pickPower <= 65)
-				|| (tile.type == 58 && pickPower <= 65)
-				|| ((tile.type == 226 || tile.type == 237) && pickPower <= 210)
-				|| (Main.tileDungeon[tile.type] && pickPower <= 65)
+				||
+				tile.type == TileID.Obsidian && pickPower <= 65 ||
+				tile.type == TileID.Hellstone && pickPower <= 65 ||
+				(tile.type == TileID.LihzahrdBrick || tile.type == TileID.LihzahrdAltar) && pickPower <= 210 ||
+				Main.tileDungeon[tile.type] && pickPower <= 65
 //				|| ((double)AX[index] < (double)Main.maxTilesX * 0.35 || (double)AX[index] > (double)Main.maxTilesX * 0.65)
-				|| (tile.type == 107 && pickPower <= 100)
-				|| (tile.type == 108 && pickPower <= 110)
-				|| (tile.type == 111 && pickPower <= 150)
-				|| (tile.type == 221 && pickPower <= 100)
-				|| (tile.type == 222 && pickPower <= 110)
-				|| (tile.type == 223 && pickPower <= 150)
+				||
+				tile.type == TileID.Cobalt && pickPower <= 100 ||
+				tile.type == TileID.Mythril && pickPower <= 110 ||
+				tile.type == TileID.Adamantite && pickPower <= 150 ||
+				tile.type == TileID.Palladium && pickPower <= 100 ||
+				tile.type == TileID.Orichalcum && pickPower <= 110 ||
+				tile.type == TileID.Titanium && pickPower <= 150
 			)
-			{
 				return false;
-			}
 
-			int check=1;
+			int check = 1;
 			TileLoader.PickPowerCheck(tile, pickPower, ref check);
-			if(check == 0)
-			{
-				return false;
-			}
-			
-			return true;
-
+			return check != 0;
 		}
 	}
 }

@@ -15,7 +15,7 @@ Items
 
  Also, wires on chests has been hit!
 
- useage:
+ usage:
      Use to placed chest (left   click) : Select stack chest.
      Use to anything     (rigtht click) : Open selected chest.
      Right click this item              : On/Off chest stacking (or player inventry stacking).
@@ -28,7 +28,7 @@ Items
  Summon a pet that serch ores and pick ores or treasures for you!
  Pets pick power is depend on pickel in your inventory.
 
- useage:
+ usage:
      Set to pet slot.
 
  recipie:
@@ -41,7 +41,7 @@ Items
 [ Auto Picker (and Controller)]
  Pick and collect item automatically when Hit Wire!
 
- useage:
+ usage:
    1.Place any Chest.
    2.Click Chest by AutoPickerController.
    3.Place AutoPicker and deposit any pickel.
@@ -56,7 +56,7 @@ Items
  Minions are attack the enemies when you deposit summon weapon in this chest!
  So, You obtain the chance that you get items without adventure!
 
- useage:
+ usage:
      After placement, deposit summon weapon.
 
  recipie:
@@ -69,7 +69,7 @@ Items
  Witch's Pot change items When hit wire.
  * The item is reborn! So,I recommend to store worthless items(like a wooden arrow)...
 
- useage:
+ usage:
      After placement, deposit worthless item.
 
  recipie:
@@ -78,7 +78,7 @@ Items
  [ Quick Liquid ]
  Water,Lava,Honey falls to quickly!
 
- useage:
+ usage:
      Right click this  : On/Off Quick fall.
 
  recipie:
@@ -88,7 +88,7 @@ Items
  [ Reflection Field ]
  When set to accesary slot, Reflect monsters and attacks!
 
- useage:
+ usage:
      Set to accesary slot.
 
  recipie:
@@ -98,7 +98,7 @@ Items
 [ Mount Of Discord ]
  Go through any blocks when you mount!
 
- useage:
+ usage:
      Set to mount slot.
 
  recipie:
@@ -108,7 +108,7 @@ Items
 [ Item Grower Chest ]
  Per day, items in chest to be twice!
 
- useage:
+ usage:
      Place chest and 99 GrassSeeds on ground and deposit in items.
 
  recipie:
@@ -118,7 +118,7 @@ Items
 [ Item Vacuumer ]
  When enemy drops items, the items track to you automatically!
 
- useage:
+ usage:
      Right click this  : On/Off tracking.
 
  recipie:
@@ -128,7 +128,7 @@ Items
 [ Map Shiner ]
  When you use, mini Map has been to maximum bright!
 
- useage:
+ usage:
      Right click this  : Map has been max bright.
 
  recipie:
@@ -138,7 +138,7 @@ Items
 [ Hit Wire Rod ]
  When you use this item to wire, trip signal insted of any switchs/lever!
 
- useage:
+ usage:
      Use to placed wire (left click) :Hit Wire!
 
  recipie:
@@ -160,6 +160,3 @@ v0.3.41
 
  o Quick Liquid V2 New!!
    Caluculatable more amount of liquid!!
-
-v0.3.40
- Support MagicStorageExtra!! 

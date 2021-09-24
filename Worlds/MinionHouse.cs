@@ -1,169 +1,149 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Terraria;
 using Terraria.ModLoader;
 
 namespace AutoStacker.Worlds
 {
-	public class MinionHouse : Terraria.ModLoader.ModWorld
+	public class MinionHouse : ModSystem
 	{
-		Dictionary<int, Player> minionHousePlayer   = new Dictionary<int, Player>();
-		Dictionary<int, int   > minionHousePlayerNo = new Dictionary<int, int   >();
-		Dictionary<int, int   > minionHousePlayerAi = new Dictionary<int, int   >();
-		
-		public void init()
+		private Dictionary<int, Player> _minionHousePlayer = new();
+		private Dictionary<int, int> _minionHousePlayerNo = new();
+		private Dictionary<int, int> _minionHousePlayerAi = new();
+
+		public void Init()
 		{
-			this.minionHousePlayer   = new Dictionary<int, Player>();
-			this.minionHousePlayerNo = new Dictionary<int, int   >();
-			this.minionHousePlayerAi = new Dictionary<int, int   >();
+			_minionHousePlayer = new Dictionary<int, Player>();
+			_minionHousePlayerNo = new Dictionary<int, int>();
+			_minionHousePlayerAi = new Dictionary<int, int>();
 		}
-		
-		
-		public override void PreUpdate()
+
+		public override void PreUpdateWorld()
 		{
-			if(!Terraria.Program.LoadedEverything )
-			{
+			if (!Program.LoadedEverything)
 				return;
-			}
-			
-			int minionHouseChestType = mod.GetTile("MinionHouse").Type;
-			
-			for(int chestNo = 0; chestNo < Main.chest.Length; chestNo ++)
+
+			int minionHouseChestType = ModContent.TileType<Tiles.MinionHouse>();
+
+			for (int chestNo = 0; chestNo < Main.chest.Length; chestNo++)
 			{
 				Chest chest = Main.chest[chestNo];
-				if(
-					chest == null 
-					|| Main.tile[chest.x, chest.y] == null 
-					|| !Main.tile[chest.x, chest.y].active()
-					|| Main.tile[chest.x, chest.y].type != minionHouseChestType
+				if (
+					chest == null ||
+					Main.tile[chest.x, chest.y] == null ||
+					!Main.tile[chest.x, chest.y].IsActive ||
+					Main.tile[chest.x, chest.y].type != minionHouseChestType
 				)
-				{
 					continue;
-				}
-				
+
 				//spawn player
-				if(!minionHousePlayer.ContainsKey(chestNo))
-				{
-					for(int playerNo=0;playerNo<Main.player.Length;playerNo++)
-					{
-						if(Main.player[playerNo]==null || !Main.player[playerNo].active)
+				if (!_minionHousePlayer.ContainsKey(chestNo))
+					for (int playerNo = 0; playerNo < Main.player.Length; playerNo++)
+						if (Main.player[playerNo] == null || !Main.player[playerNo].active)
 						{
 							Main.player[playerNo] = (Player)Main.player[Main.myPlayer].clientClone();
 
-							minionHousePlayer[chestNo]   = Main.player[playerNo];
-							minionHousePlayerNo[chestNo] = playerNo;
-							minionHousePlayerAi[chestNo] = 0;
-							
-							Main.player[playerNo].active               =true;
-							Main.player[playerNo].dead                 =false;
-							Main.player[playerNo].activeNPCs           =1f;
-							Main.player[playerNo].townNPCs             =1f;
-							Main.player[playerNo].name                 ="Minion House Keeper";
-							Main.player[playerNo].velocity.X           =0f;
-							Main.player[playerNo].velocity.Y           =0f;
-							Main.player[playerNo].releaseDown          =false;
-							Main.player[playerNo].releaseRight         =false;
-							Main.player[playerNo].releaseHook          =false;
-							Main.player[playerNo].releaseInventory     =false;
-							Main.player[playerNo].releaseJump          =false;
-							Main.player[playerNo].releaseLeft          =false;
-							Main.player[playerNo].releaseMapFullscreen =false;
-							Main.player[playerNo].releaseMapStyle      =false;
-							Main.player[playerNo].releaseMount         =false;
-							Main.player[playerNo].releaseQuickHeal     =false;
-							Main.player[playerNo].releaseQuickMana     =false;
-							Main.player[playerNo].releaseRight         =false;
-							Main.player[playerNo].releaseSmart         =false;
-							Main.player[playerNo].releaseThrow         =false;
-							Main.player[playerNo].releaseUp            =false;
-							Main.player[playerNo].releaseUseItem       =false;
-							Main.player[playerNo].releaseUseTile       =false;
-							Main.player[playerNo].selectedItem=0;
-							
-							Main.player[playerNo].position.X =chest.x * 16 - 16*2;
-							Main.player[playerNo].position.Y =chest.y * 16 - 16*4;
-							
+							_minionHousePlayer[chestNo] = Main.player[playerNo];
+							_minionHousePlayerNo[chestNo] = playerNo;
+							_minionHousePlayerAi[chestNo] = 0;
+
+							Main.player[playerNo].active = true;
+							Main.player[playerNo].dead = false;
+							Main.player[playerNo].nearbyActiveNPCs = 1f;
+							Main.player[playerNo].townNPCs = 1f;
+							Main.player[playerNo].name = "Minion House Keeper";
+							Main.player[playerNo].velocity.X = 0f;
+							Main.player[playerNo].velocity.Y = 0f;
+							Main.player[playerNo].releaseDown = false;
+							Main.player[playerNo].releaseRight = false;
+							Main.player[playerNo].releaseHook = false;
+							Main.player[playerNo].releaseInventory = false;
+							Main.player[playerNo].releaseJump = false;
+							Main.player[playerNo].releaseLeft = false;
+							Main.player[playerNo].releaseMapFullscreen = false;
+							Main.player[playerNo].releaseMapStyle = false;
+							Main.player[playerNo].releaseMount = false;
+							Main.player[playerNo].releaseQuickHeal = false;
+							Main.player[playerNo].releaseQuickMana = false;
+							Main.player[playerNo].releaseRight = false;
+							Main.player[playerNo].releaseSmart = false;
+							Main.player[playerNo].releaseThrow = false;
+							Main.player[playerNo].releaseUp = false;
+							Main.player[playerNo].releaseUseItem = false;
+							Main.player[playerNo].releaseUseTile = false;
+							Main.player[playerNo].selectedItem = 0;
+
+							Main.player[playerNo].position.X = chest.x * 16 - 16 * 2;
+							Main.player[playerNo].position.Y = chest.y * 16 - 16 * 4;
+
 							break;
 						}
-					}
-				}
-				
+
 				//use item
-				if(minionHousePlayerAi[chestNo] > 0)
+				if (_minionHousePlayerAi[chestNo] > 0)
 				{
-					minionHousePlayerAi[chestNo] -= 1;
+					_minionHousePlayerAi[chestNo] -= 1;
 					continue;
 				}
-				
-				for(int itemNo = 0; itemNo < chest.item.Length; itemNo++)
+
+				foreach (Item item in chest.item)
 				{
-					Item item = chest.item[itemNo];
-					
-					if(item==null || item.IsAir || !item.summon)
-					{
+					if (item == null || item.IsAir || !item.CountsAsClass(DamageClass.Summon))
 						continue;
-					}
-					
-					minionHousePlayerAi[chestNo] = 2 * 1000;
-					
+
+					_minionHousePlayerAi[chestNo] = 2 * 1000;
+
 					int myPlayer = Main.myPlayer;
-					Main.myPlayer = minionHousePlayerNo[chestNo];
-					
-					Item playerItem = minionHousePlayer[chestNo].inventory[0].Clone();
-					minionHousePlayer[chestNo].inventory[0] = item.Clone();
-					
-					minionHousePlayer[chestNo].controlUseItem=true;
-					minionHousePlayer[chestNo].releaseUseItem=true;
-					minionHousePlayer[chestNo].ItemCheck(minionHousePlayerNo[chestNo]);
-					minionHousePlayer[chestNo].controlUseItem=false;
-					minionHousePlayer[chestNo].releaseUseItem=false;
-					
+					Main.myPlayer = _minionHousePlayerNo[chestNo];
+
+					Item playerItem = _minionHousePlayer[chestNo].inventory[0].Clone();
+					_minionHousePlayer[chestNo].inventory[0] = item.Clone();
+
+					_minionHousePlayer[chestNo].controlUseItem = true;
+					_minionHousePlayer[chestNo].releaseUseItem = true;
+					_minionHousePlayer[chestNo].ItemCheck(_minionHousePlayerNo[chestNo]);
+					_minionHousePlayer[chestNo].controlUseItem = false;
+					_minionHousePlayer[chestNo].releaseUseItem = false;
+
 					Main.myPlayer = myPlayer;
 				}
-				minionHousePlayer[chestNo].controlUseItem=false;
-				minionHousePlayer[chestNo].releaseUseItem=false;
+
+				_minionHousePlayer[chestNo].controlUseItem = false;
+				_minionHousePlayer[chestNo].releaseUseItem = false;
 			}
-			
-			
+
+
 			//take damage
-			for(int projectileNo = 0; projectileNo < Main.projectile.Length; projectileNo++)
+			for (int projectileNo = 0; projectileNo < Main.maxProjectiles; projectileNo++)
 			{
-				Projectile projectile=Main.projectile[projectileNo];
-				
-				if(!minionHousePlayerNo.ContainsValue(projectile.owner))
-				{
+				Projectile projectile = Main.projectile[projectileNo];
+
+				if (!_minionHousePlayerNo.ContainsValue(projectile.owner))
 					continue;
-				}
 				Player player = Main.player[projectile.owner];
-				
-				for(int npcNo=0; npcNo < Main.npc.Length; npcNo++)
+
+				for (int npcNo = 0; npcNo < Main.maxNPCs; npcNo++)
 				{
 					NPC npc = Main.npc[npcNo];
-					if (
-						   projectile.position.X + (float)projectile.width  > npc.position.X 
-						&& projectile.position.X < npc.position.X + (float)npc.width 
-						&& projectile.position.Y + (float)projectile.height > npc.position.Y 
-						&& projectile.position.Y < npc.position.Y + (float)npc.height 
-						&& !npc.friendly 
-					)
-					{
-						npc.StrikeNPC( projectile.damage, projectile.knockBack, (int)projectile.rotation, false, false, false);
-					}
+					if (projectile.position.X + projectile.width > npc.position.X &&
+						projectile.position.X < npc.position.X + npc.width &&
+						projectile.position.Y + projectile.height > npc.position.Y &&
+						projectile.position.Y < npc.position.Y + npc.height &&
+						!npc.friendly)
+						npc.StrikeNPC(projectile.damage, projectile.knockBack, (int)projectile.rotation);
 				}
 			}
-			
+
 			//check destroyed chest -> player delete
-			foreach(int chestNo in minionHousePlayer.Keys)
+			if (_minionHousePlayer.Keys.Any(chestNo => Main.chest[chestNo] == null))
 			{
-				if(Main.chest[chestNo]==null)
+				foreach (int chestNo2 in _minionHousePlayer.Keys)
 				{
-					foreach(int chestNo2 in minionHousePlayer.Keys)
-					{
-						Main.player[minionHousePlayerNo[chestNo2]] = new Player();
-						Main.player[minionHousePlayerNo[chestNo2]].active=false;
-					}
-					this.init();
-					break;
+					Main.player[_minionHousePlayerNo[chestNo2]] = new Player();
+					Main.player[_minionHousePlayerNo[chestNo2]].active = false;
 				}
+
+				Init();
 			}
 		}
 	}

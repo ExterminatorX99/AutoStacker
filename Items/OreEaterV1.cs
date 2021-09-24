@@ -1,3 +1,4 @@
+using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -9,61 +10,58 @@ namespace AutoStacker.Items
 		public override void SetStaticDefaults()
 		{
 			DisplayName.SetDefault("Ore Eater Ver.1");
-			string str = "Summons a Pet Ore Eater Ver.1\n";
-			str +=       "[status] \n";
-			str +=       "ore serch range      : 10\n";
-			str +=       "speed                : 3\n";
-			str +=       "pick in water        : disenable\n";
-			str +=       "pick in lava         : disenable\n";
-			str +=       "through block        : disenable\n";
-			str +=       "through unreveal map : disenable\n";
-			str +=       "light                : none";
+			const string str = "Summons a Pet Ore Eater Ver.1\n" +
+							   "[status] \n" +
+							   "ore serch range      : 10\n" +
+							   "speed                : 3\n" +
+							   "pick in water        : disenable\n" +
+							   "pick in lava         : disenable\n" +
+							   "through block        : disenable\n" +
+							   "through unreveal map : disenable\n" +
+							   "light                : none";
 			Tooltip.SetDefault(str);
 		}
 
 		public override void SetDefaults()
 		{
-			item.damage = 0;
-			item.useStyle = 1;
-			item.shoot = mod.ProjectileType("OreEaterV1");
-			item.width = 16;
-			item.height = 30;
-			item.UseSound = SoundID.Item2;
-			item.useAnimation = 20;
-			item.useTime = 20;
-			item.rare = 8;
-			item.noMelee = true;
-			item.value = Item.sellPrice(0, 5, 50, 0);
-			item.buffType = mod.BuffType("OreEaterV1");
+			Item.damage = 0;
+			Item.useStyle = ItemUseStyleID.Swing;
+			Item.shoot = ModContent.ProjectileType<Projectiles.OreEaterV1>();
+			Item.width = 16;
+			Item.height = 30;
+			Item.UseSound = SoundID.Item2;
+			Item.useAnimation = 20;
+			Item.useTime = 20;
+			Item.rare = ItemRarityID.Yellow;
+			Item.noMelee = true;
+			Item.value = Item.sellPrice(gold: 5, silver: 50);
+			Item.buffType = ModContent.BuffType<Buffs.OreEaterV1>();
 		}
 
 		public override void AddRecipes()
 		{
-			ModRecipe recipe = new ModRecipe(mod);
-			recipe.AddIngredient(Terraria.ID.ItemID.IronPickaxe, 1);
-			recipe.AddTile(TileID.WorkBenches);
-			recipe.SetResult(this);
-			recipe.AddRecipe();
+			CreateRecipe()
+				.AddIngredient(ItemID.IronPickaxe)
+				.AddTile(TileID.WorkBenches)
+				.Register();
 
-			ModRecipe recipe2 = new ModRecipe(mod);
-			recipe2.AddIngredient(Terraria.ID.ItemID.LeadPickaxe, 1);
-			recipe2.AddTile(TileID.WorkBenches);
-			recipe2.SetResult(this);
-			recipe2.AddRecipe();
-
+			CreateRecipe()
+				.AddIngredient(ItemID.LeadPickaxe)
+				.AddTile(TileID.WorkBenches)
+				.Register();
 		}
 
-		public override void UseStyle(Player player)
+		public override void UseStyle(Player player, Rectangle heldItemFrame)
 		{
 			if (player.whoAmI == Main.myPlayer && player.itemTime == 0)
 			{
-				player.ClearBuff(mod.BuffType("OreEaterV1"));
-				player.ClearBuff(mod.BuffType("OreEaterV2"));
-				player.ClearBuff(mod.BuffType("OreEaterV3"));
-				player.ClearBuff(mod.BuffType("OreEaterV4"));
-				player.ClearBuff(mod.BuffType("OreEaterV5"));
-				
-				player.AddBuff(item.buffType, 3600, true);
+				player.ClearBuff(ModContent.BuffType<Buffs.OreEaterV1>());
+				player.ClearBuff(ModContent.BuffType<Buffs.OreEaterV2>());
+				player.ClearBuff(ModContent.BuffType<Buffs.OreEaterV3>());
+				player.ClearBuff(ModContent.BuffType<Buffs.OreEaterV4>());
+				player.ClearBuff(ModContent.BuffType<Buffs.OreEaterV5>());
+
+				player.AddBuff(Item.buffType, 3600);
 			}
 		}
 	}

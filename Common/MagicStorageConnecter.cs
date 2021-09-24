@@ -1,30 +1,19 @@
-using System;
-using System.Linq;
-using Microsoft.Xna.Framework;
+using System.Text.RegularExpressions;
 using Terraria;
 using Terraria.DataStructures;
-using Terraria.ID;
-using Terraria.ModLoader;
-using Terraria.ObjectData;
-using Terraria.Enums;
-using Terraria.Localization;
-using System.Text.RegularExpressions;
 
 namespace AutoStacker.Common
 {
-	class MagicStorageConnecter
+	public static class MagicStorageConnecter
 	{
+		private static readonly Regex RegexMagicStorage = new("^MagicStorage(?!Extra)", RegexOptions.Compiled);
 
-		private static Regex regexMagicStorage = new Regex("^MagicStorage(?!Extra)");
-		private static Regex regexMagicStorageExtra = new Regex("^MagicStorageExtra");
-
-		//Magic Storage
 		public static TileEntity FindHeart(Point16 origin)
 		{
-			var tEStorageCenter = TileEntity.ByPosition[origin];
-			if(tEStorageCenter == null || tEStorageCenter.GetType().Name != "TEStorageHeart")
+			TileEntity tEStorageCenter = TileEntity.ByPosition[origin];
+			if (tEStorageCenter == null || tEStorageCenter.GetType().Name != "TEStorageHeart")
 				return null;
-			
+
 			return tEStorageCenter;
 		}
 
@@ -34,17 +23,12 @@ namespace AutoStacker.Common
 			if (tEStorageCenter == null)
 				return false;
 
-			if(regexMagicStorage.IsMatch(tEStorageCenter.GetType().Assembly.GetName().Name))
+			if (RegexMagicStorage.IsMatch(tEStorageCenter.GetType().Assembly.GetName().Name))
 			{
-				Common.MagicStorageAdapter.DepositItem(tEStorageCenter,item);
+				MagicStorageAdapter.DepositItem(tEStorageCenter, item);
 				return true;
 			}
 
-			if(regexMagicStorageExtra.IsMatch(tEStorageCenter.GetType().Assembly.GetName().Name))
-			{
-				Common.MagicStorageExtraAdapter.DepositItem(tEStorageCenter,item);
-				return true;
-			}
 			return false;
 		}
 	}

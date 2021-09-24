@@ -9,47 +9,46 @@ namespace AutoStacker.Items
 		public override void SetStaticDefaults()
 		{
 			DisplayName.SetDefault("Quick Liquid");
-			Tooltip.SetDefault("Useage\nRight click this item : ON/OFF Quick Liquid");
+			Tooltip.SetDefault("usage\nRight click this item : ON/OFF Quick Liquid");
 		}
 
 		public override void SetDefaults()
 		{
-			item.width = 26;
-			item.height = 22;
-			item.maxStack = 99;
-			item.useTurn = true;
-			item.autoReuse = true;
-			item.useAnimation = 15;
-			item.useTime = 10;
-			item.useStyle = 1;
-			item.consumable = true;
-			item.value = 500;
-			item.createTile = mod.TileType("QuickLiquid");
+			Item.width = 26;
+			Item.height = 22;
+			Item.maxStack = 99;
+			Item.useTurn = true;
+			Item.autoReuse = true;
+			Item.useAnimation = 15;
+			Item.useTime = 10;
+			Item.useStyle = ItemUseStyleID.Swing;
+			Item.consumable = true;
+			Item.value = 500;
 		}
-		public override bool CanRightClick()
-		{
-			return true;
-		}
-		
+
+		public override bool CanRightClick() => true;
+
 		public override void RightClick(Player player)
 		{
-			if(ModWorld.QuickLiquid.quickSwitch){
-				ModWorld.QuickLiquid.quickSwitch=false;
+			if (Worlds.QuickLiquid.QuickSwitch)
+			{
+				Worlds.QuickLiquid.QuickSwitch = false;
 				Main.NewText("Quick Liquid OFF!!");
-			}else{
-				ModWorld.QuickLiquid.quickSwitch=true;
+			}
+			else
+			{
+				Worlds.QuickLiquid.QuickSwitch = true;
 				Main.NewText("Quick Liquid ON!!");
 			}
-			item.stack++;
+
+			Item.stack++;
 		}
-		
+
 		public override void AddRecipes()
 		{
-			ModRecipe recipe = new ModRecipe(mod);
-			recipe.AddTile(TileID.WorkBenches);
-			recipe.SetResult(this);
-			recipe.AddRecipe();
+			CreateRecipe()
+				.AddTile(TileID.WorkBenches)
+				.Register();
 		}
-		
 	}
 }

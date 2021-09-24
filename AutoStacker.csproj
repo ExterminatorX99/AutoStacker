@@ -9,6 +9,10 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="tModLoader.CodeAssist" Version="0.1.*" />
-    <ProjectReference Include="..\MagicStorage\MagicStorage.csproj"/>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="MagicStorage">
+      <HintPath>lib\MagicStorage_v0.5.0.3.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>

@@ -1,4 +1,5 @@
-﻿using Terraria;
+﻿using System;
+using Terraria;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 
@@ -6,50 +7,39 @@ namespace AutoStacker.Players
 {
 	public class ItemVacuumer : ModPlayer
 	{
-		
-		public static bool vacuumSwitch=false;
-		
+		public static bool VacuumSwitch;
+
 		public ItemVacuumer()
 		{
-			vacuumSwitch = false;
+			VacuumSwitch = false;
 		}
 
-		public override TagCompound Save()
+		public override void SaveData(TagCompound tag)
 		{
-			TagCompound tag = new TagCompound();
-			tag.Set("vacuumSwitch", vacuumSwitch);
-			
-			return tag;
+			tag.Set("vacuumSwitch", VacuumSwitch);
 		}
-		
-		public override void Load(TagCompound tag)
+
+		public override void LoadData(TagCompound tag)
 		{
-			if(tag.ContainsKey("vacuumSwitch"))
-			{
-				vacuumSwitch=tag.GetBool("vacuumSwitch");
-			}
-			else
-			{
-				vacuumSwitch=false;
-			}
+			VacuumSwitch = tag.ContainsKey("vacuumSwitch") && tag.GetBool("vacuumSwitch");
 		}
-		
+
 		public override void PreUpdate()
 		{
-			if(vacuumSwitch)
+			if (VacuumSwitch)
 			{
 				Player player = Main.LocalPlayer;
-				int velocity = 12;
+				const int velocity = 12;
 				foreach (Item item in Main.item)
-				{
 					if (item.active && item.noGrabDelay == 0 && !ItemLoader.GrabStyle(item, player) && ItemLoader.CanPickup(item, player))
 					{
-						int distanceX   = (int)player.Center.X - (int)item.position.X;
-						int distanceY   = (int)player.Center.Y - (int)item.position.Y;
-						int distanceSum = System.Math.Abs(distanceX) + System.Math.Abs(distanceY);
-						if(distanceSum > 0)
+						int distanceX = (int)player.Center.X - (int)item.position.X;
+						int distanceY = (int)player.Center.Y - (int)item.position.Y;
+						int distanceSum = Math.Abs(distanceX) + Math.Abs(distanceY);
+						if (distanceSum > 0)
 						{
-							if( item.velocity.X <= 1 && item.velocity.Y <= 1){
+							if (item.velocity.X <= 1 && item.velocity.Y <= 1)
+							{
 								item.velocity.X = (float)(velocity * distanceX / distanceSum + distanceX * 0.0125);
 								item.velocity.Y = (float)(velocity * distanceY / distanceSum + distanceY * 0.0125);
 								item.position.X += item.velocity.X;
@@ -62,7 +52,6 @@ namespace AutoStacker.Players
 							}
 						}
 					}
-				}
 			}
 		}
 	}

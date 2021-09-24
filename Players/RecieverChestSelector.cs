@@ -6,68 +6,54 @@ using Terraria.ModLoader.IO;
 
 namespace AutoStacker.Players
 {
-	class RecieverChestSelector : ModPlayer
+	internal class RecieverChestSelector : ModPlayer
 	{
-		public bool autoSendEnabled = false;
-		public Item activeItem;
-		public Point16 topLeft = new Point16((short)-1,(short)-1);
-		
-		public override TagCompound Save()
+		public bool AutoSendEnabled;
+		public Item ActiveItem;
+		public Point16 TopLeft = Point16.NegativeOne;
+
+		public bool NotSmartCursor;
+
+		public override void SaveData(TagCompound tag)
 		{
-			TagCompound tag = new TagCompound();
-			tag.Set("autoSendEnabled", autoSendEnabled);
-			
-			int index = Array.IndexOf(this.player.inventory, activeItem);
+			tag.Set("autoSendEnabled", AutoSendEnabled);
+
+			int index = Array.IndexOf(Player.inventory, ActiveItem);
 			tag.Set("activeItem", index);
-			
-			tag.Set("topLeftX", topLeft.X);
-			tag.Set("topLeftY", topLeft.Y);
-			return tag;
+
+			tag.Set("topLeftX", TopLeft.X);
+			tag.Set("topLeftY", TopLeft.Y);
 		}
-		
-		public override void Load(TagCompound tag)
+
+		public override void LoadData(TagCompound tag)
 		{
-			int itemNo;
-			
-			if( tag.ContainsKey("autoSendEnabled") )
+			if (tag.ContainsKey("autoSendEnabled"))
+				AutoSendEnabled = tag.GetBool("autoSendEnabled");
+			if (tag.ContainsKey("activeItem"))
 			{
-				autoSendEnabled=tag.GetBool("autoSendEnabled");
+				int itemNo = tag.GetInt("activeItem");
+
+				if (itemNo >= 0 && itemNo < Player.inventory.Length && Player.inventory[itemNo].type == ModContent.ItemType<Items.RecieverChestSelector>())
+					ActiveItem = Player.inventory[itemNo];
 			}
-			if( tag.ContainsKey("activeItem") )
-			{
-				itemNo = tag.GetInt("activeItem");
-				
-				if( itemNo >= 0 && itemNo < this.player.inventory.Length && this.player.inventory[itemNo].type == ModContent.ItemType<Items.RecieverChestSelector>() )
-				{
-					activeItem = this.player.inventory[itemNo];
-				}
-			}
-			
-			if(tag.ContainsKey("topLeftX") && tag.ContainsKey("topLeftY"))
-			{
-				topLeft = new Point16(tag.GetShort("topLeftX"), tag.GetShort("topLeftY"));
-			}
+
+			if (tag.ContainsKey("topLeftX") && tag.ContainsKey("topLeftY"))
+				TopLeft = new Point16(tag.GetShort("topLeftX"), tag.GetShort("topLeftY"));
 		}
-		
-		public bool notSmartCursor = false;
-		
+
 		public override void ResetEffects()
 		{
-			
 			Item item = Main.LocalPlayer.inventory[Main.LocalPlayer.selectedItem];
-			
-			if(!Main.playerInventory || item.type != mod.ItemType("RecieverChestSelector"))
+
+			if (!Main.playerInventory || item.type != ModContent.ItemType<Items.RecieverChestSelector>())
+				NotSmartCursor = false;
+
+			if (NotSmartCursor)
 			{
-				notSmartCursor=false;
-			}
-			
-			if(notSmartCursor)
-			{
-				Terraria.Main.SmartCursorEnabled=false;
+				Main.SmartCursorEnabled = false;
 				Player.tileRangeX = Main.Map.MaxWidth;
 				Player.tileRangeY = Main.Map.MaxHeight;
 			}
 		}
 	}
 }
-

@@ -12,25 +12,24 @@ namespace AutoStacker.Items
 
 		public override void SetDefaults()
 		{
-			item.width = 20;
-			item.height = 30;
-			item.useTime = 20;
-			item.useAnimation = 20;
-			item.useStyle = 1;
-			item.value = 30000;
-			item.rare = 2;
-			item.UseSound = SoundID.Item79;
-			item.noMelee = true;
-			item.mountType = ModContent.MountType<Mounts.MountOfDiscord>();
+			Item.width = 20;
+			Item.height = 30;
+			Item.useTime = 20;
+			Item.useAnimation = 20;
+			Item.useStyle = ItemUseStyleID.Swing;
+			Item.value = 30000;
+			Item.rare = ItemRarityID.Green;
+			Item.UseSound = SoundID.Item79;
+			Item.noMelee = true;
+			Item.mountType = ModContent.MountType<Mounts.MountOfDiscord>();
 		}
-		
+
 		public override void AddRecipes()
 		{
-			ModRecipe recipe = new ModRecipe(mod);
-			recipe.AddTile(TileID.WorkBenches);
-			recipe.AddIngredient(Terraria.ID.ItemID.Glass, 999);
-			recipe.SetResult(this);
-			recipe.AddRecipe();
+			CreateRecipe()
+				.AddTile(TileID.WorkBenches)
+				.AddIngredient(ItemID.Glass, 999)
+				.Register();
 		}
 	}
 }

@@ -1,38 +1,27 @@
-using System;
-using System.Reflection;
-using System.Linq;
-using System.Collections.Generic;
 using Terraria;
-using Terraria.ID;
-using Terraria.Localization;
 using Terraria.ModLoader;
-using Terraria.Utilities;
 
 namespace AutoStacker.GlobalNPCs
 {
 	public class MinionHouse : GlobalNPC
 	{
-		
 		public override void EditSpawnRate(Player player, ref int spawnRate, ref int maxSpawns)
 		{
-			if(player.name == "MinionHouse")
-			{
+			if (player.name == "MinionHouse")
 				spawnRate *= 2;
-			}
 		}
-		
-		
+
 		public override void EditSpawnRange(Player player, ref int spawnRangeX, ref int spawnRangeY, ref int safeRangeX, ref int safeRangeY)
 		{
-			if(player.name == "MinionHouse")
+			if (player.name == "MinionHouse")
 			{
 				spawnRangeX /= 4;
 				spawnRangeY /= 4;
-				safeRangeX   = 0;
-				safeRangeY   = 0;
+				safeRangeX = 0;
+				safeRangeY = 0;
 			}
 		}
-		
+
 		//public override void EditSpawnPool(IDictionary<int, float> pool, NPCSpawnInfo spawnInfo)
 		//{
 		//	int x = Main.maxTilesX*16/2;
@@ -89,16 +78,10 @@ namespace AutoStacker.GlobalNPCs
 		//	
 		//	
 		//}
-		
-		
-		
+
 		//public override bool CheckActive(NPC npc)
 		//{
 		//	return true;
 		//}
-		
-		
 	}
 }
-	
-

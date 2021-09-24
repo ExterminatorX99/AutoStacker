@@ -1,5 +1,5 @@
-using System;
 using System.Collections.Generic;
+using AutoStacker.Common;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ID;
@@ -10,125 +10,98 @@ namespace AutoStacker.Items
 {
 	public class AutoPickerController : ModItem
 	{
-		public Point16 topLeft = new Point16((short)-1,(short)-1);
-		
+		public Point16 TopLeft = Point16.NegativeOne;
+
+		public override ModItem Clone(Item item)
+		{
+			AutoPickerController newItem = (AutoPickerController)base.Clone(item);
+			newItem.TopLeft = TopLeft;
+			return newItem;
+		}
+
 		public override void SetStaticDefaults()
 		{
 			DisplayName.SetDefault("Auto Picker Controller");
-			
-			String tooltip_str ="Useage \n";
-			tooltip_str       +="  Click chest           : Select Recever chest\n";
-			tooltip_str       +="  Right click AutoPicker: Select AutoPicker\n";
-			tooltip_str       +="  Right click this item : ON/OFF auto pick \n";
-			Tooltip.SetDefault(tooltip_str);
+
+			const string tooltip = "usage \n" +
+								   "  Click chest           : Select Receiver chest\n" +
+								   "  Right click AutoPicker: Select AutoPicker\n" +
+								   "  Right click this item : ON/OFF auto pick \n";
+
+			Tooltip.SetDefault(tooltip);
 		}
-		
+
 		public override void ModifyTooltips(List<TooltipLine> tooltips)
 		{
-			if(topLeft.X != -1 && topLeft.Y != -1)
+			if (TopLeft != Point16.NegativeOne)
 			{
-				TooltipLine lineH2 = new TooltipLine(mod, "head2", "ReceverChest [" + topLeft.X + "," + topLeft.Y + "]\n ");
-				tooltips.Insert(2,lineH2);
+				TooltipLine lineH2 = new(Mod, "head2", $"ReceiverChest {TopLeft}\n ");
+				tooltips.Insert(2, lineH2);
 			}
 			else
 			{
-				TooltipLine lineH2 = new TooltipLine(mod, "head2", "Chest [ none ]\n ");
-				tooltips.Insert(2,lineH2);
+				TooltipLine lineH2 = new(Mod, "head2", "Chest { none }\n ");
+				tooltips.Insert(2, lineH2);
 			}
-			
 		}
-		
+
 		public override void SetDefaults()
 		{
-			item.width = 20;
-			item.height = 20;
-			item.maxStack = 1;
-			item.value = 100;
-			item.rare = 1;
-			item.useStyle = 1;
-			item.useAnimation = 28;
-			item.useTime = 28;
-			
+			Item.width = 20;
+			Item.height = 20;
+			Item.maxStack = 1;
+			Item.value = 100;
+			Item.rare = ItemRarityID.Blue;
+			Item.useStyle = ItemUseStyleID.Swing;
+			Item.useAnimation = 28;
+			Item.useTime = 28;
 		}
-		
-		public override TagCompound Save()
+
+		public override void SaveData(TagCompound tag)
 		{
-			TagCompound tag = new TagCompound();
-			tag.Set("topLeftXR", topLeft.X);
-			tag.Set("topLeftYR", topLeft.Y);
-			return tag;
+			tag["topLeftX"] = TopLeft.X;
+			tag["topLeftY"] = TopLeft.Y;
 		}
-		
-		public override void Load(TagCompound tag)
+
+		public override void LoadData(TagCompound tag)
 		{
-			if(tag.ContainsKey("topLeftXR") && tag.ContainsKey("topLeftYR"))
-			{
-				topLeft = new Point16(tag.GetShort("topLeftX"), tag.GetShort("topLeftY"));
-			}
+			short x = tag.GetShort("topLeftX");
+			short y = tag.GetShort("topLeftY");
+			TopLeft = new Point16(x, y);
 		}
-		
-		public override bool UseItem(Player player)
+
+		public override bool? UseItem(Player player)
 		{
 			//Players.AutoPicker modPlayer = (Players.AutoPicker)Main.LocalPlayer.GetModPlayer<Players.AutoPicker>();
-			Point16 origin = Common.AutoStacker.GetOrigin(Player.tileTargetX,Player.tileTargetY);
-            if (player.altFunctionUse == 0)
+			Point16 origin = Common.AutoStacker.GetOrigin(Player.tileTargetX, Player.tileTargetY);
+			if (player.altFunctionUse == 0)
 			{
-				
-				if(
-					(
-						Common.AutoStacker.FindChest(origin.X,origin.Y) != -1 
-						&& Main.tile[origin.X,origin.Y].type != ModContent.TileType<Tiles.AutoPicker>()
-					)
-					|| ((AutoStacker.modMagicStorage != null || AutoStacker.modMagicStorageExtra != null) && callMagicStorageFindHeart(origin))
+				if (
+					Common.AutoStacker.FindChest(origin.X, origin.Y) != -1 && Main.tile[origin.X, origin.Y].type != ModContent.TileType<Tiles.AutoPicker>() ||
+					AutoStacker.MagicStorageLoaded && CallMagicStorageFindHeart(origin)
 				)
 				{
-					topLeft=origin;
-					Main.NewText("Reciever Chest Selected to x:"+origin.X+", y:"+origin.Y + " !");
+					TopLeft = origin;
+					Main.NewText("Reciever Chest Selected to x:" + origin.X + ", y:" + origin.Y + " !");
 				}
 				else
 				{
 					Main.NewText("No chest to be found.");
 				}
 			}
+
 			return true;
 		}
-				
 
-		private bool callMagicStorageFindHeart(Point16 origin)
-		{
-			if(Common.MagicStorageConnecter.FindHeart(origin) == null)
-			{
-				return false;
-			}
-			else
-			{
-				return true;
-			}
-		}
-				
+		private bool CallMagicStorageFindHeart(Point16 origin) => MagicStorageConnecter.FindHeart(origin) != null;
+
 		public override void AddRecipes()
 		{
-			ModRecipe recipe = new ModRecipe(mod);
-			recipe.AddIngredient(null,"RecieverChestSelector", 1);
-			recipe.AddIngredient(ItemID.Wire,1);
-			recipe.AddTile(TileID.WorkBenches);
-			recipe.SetResult(this);
-			recipe.AddRecipe();
+			CreateRecipe()
+				.AddIngredient(null, "RecieverChestSelector")
+				.AddIngredient(ItemID.Wire)
+				.AddTile(TileID.WorkBenches)
+				.Register();
 		}
-		
-		public override ModItem Clone()
-		{
-			AutoPickerController newItem =(AutoPickerController)base.MemberwiseClone();
-			newItem.topLeft = this.topLeft;
-			return (ModItem)newItem;
-		}
-		
-		public override ModItem Clone(Item item)
-		{
-			AutoPickerController newItem = (AutoPickerController)this.NewInstance(item);
-			newItem.topLeft = this.topLeft;
-			return (ModItem)newItem;
-		}
-
 	}
 }

@@ -1,65 +1,54 @@
-using Microsoft.Xna.Framework;
-using System;
 using System.Linq;
-using System.Collections;
-using System.Collections.Generic;
+using AutoStacker.Players;
+using AutoStacker.Projectiles;
 using Terraria;
+using Terraria.GameContent;
 using Terraria.ModLoader;
-using Terraria.ID;
-using Terraria.ModLoader.IO;
-using Terraria.ObjectData;
-using Terraria.DataStructures;
 
 namespace AutoStacker.Buffs
 {
 	public class OreEaterV3 : ModBuff
 	{
-		public override void SetDefaults()
+		public override void SetStaticDefaults()
 		{
 			DisplayName.SetDefault("Ore Eater Ver.3");
 			Description.SetDefault("");
 			Main.buffNoTimeDisplay[Type] = true;
 			Main.vanityPet[Type] = true;
 		}
-		
+
 		public override void Update(Player player, ref int buffIndex)
 		{
-			if(!Terraria.Program.LoadedEverything )
-			{
+			if (!Program.LoadedEverything)
 				return;
-			}
-			
-			Players.OreEater modPlayer = player.GetModPlayer<Players.OreEater>();
-			
-			if(!modPlayer.oreEaterEnable)
+
+			OreEater modPlayer = player.GetModPlayer<OreEater>();
+
+			if (!modPlayer.OreEaterEnable)
 			{
-				modPlayer.oreEaterEnable = true;
-				bool petProjectileNotSpawned = player.ownedProjectileCounts[mod.ProjectileType("OreEaterV3")] <= 0;
+				modPlayer.OreEaterEnable = true;
+				bool petProjectileNotSpawned = player.ownedProjectileCounts[ModContent.ProjectileType<Projectiles.OreEaterV3>()] <= 0;
 				if (petProjectileNotSpawned && player.whoAmI == Main.myPlayer)
-				{
-					
-					for (int _type=Main.npcTexture.Length-1; _type >= 0; _type--)
+					for (int type = TextureAssets.Npc.Length - 1; type >= 0; type--)
 					{
-						string npcTexture = Main.npcTexture[_type].ToString();
-						if(npcTexture == "AutoStacker/NPCs/OreEaterV3")
+						string npcTexture = TextureAssets.Npc[type].ToString();
+						if (npcTexture == "AutoStacker/NPCs/OreEaterV3")
 						{
-							foreach(var npc in Main.npc.Where( npc => npc.type == _type ))
-							{
+							foreach (NPC npc in Main.npc.Where(npc => npc.type == type))
 								npc.active = false;
-							}
-							modPlayer.index = NPC.NewNPC((int)player.position.X, (int)player.position.Y, _type );
-							modPlayer.npc = Main.npc[modPlayer.index];
-							NPC.setNPCName("Ore Eater",modPlayer.npc.type);
-							
-							Projectile.NewProjectile(player.position.X + (float)(player.width / 2), player.position.Y + (float)(player.height / 2), 0f, 0f, mod.ProjectileType("OreEaterV3"), 0, 0f, player.whoAmI, 0f, 0f);
+							modPlayer.Index = NPC.NewNPC((int)player.position.X, (int)player.position.Y, type);
+							modPlayer.NPC = Main.npc[modPlayer.Index];
+							NPC.setNPCName("Ore Eater", modPlayer.NPC.type);
+
+							Projectile.NewProjectile(player.GetProjectileSource_Buff(buffIndex), player.position.X + player.width / 2,
+								player.position.Y + player.height / 2, 0f, 0f, ModContent.ProjectileType<Projectiles.OreEaterV3>(), 0, 0f, player.whoAmI);
 							//modPlayer.pet.initListA();
 							//modPlayer.pet.routeListX.Clear();
 							//modPlayer.pet.routeListY.Clear();
-							modPlayer.pet = new Projectiles.PetV3();
+							modPlayer.Pet = new PetV3();
 							break;
 						}
 					}
-				}
 			}
 		}
 	}

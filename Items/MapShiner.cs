@@ -1,4 +1,3 @@
-using System;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -7,67 +6,59 @@ namespace AutoStacker.Items
 {
 	public class MapShiner : ModItem
 	{
+		public static bool Active;
+
 		public override void SetStaticDefaults()
 		{
 			DisplayName.SetDefault("Map Shiner");
-			Tooltip.SetDefault("Useage\nRight click this item : Map Shine");
+			Tooltip.SetDefault("usage\nRight click this item : Map Shine");
 		}
-		
-        public override void SetDefaults()
+
+		public override void SetDefaults()
 		{
-			item.width = 20;
-			item.height = 20;
-			item.maxStack = 1;
-			item.value = 100;
-			item.rare = 1;
-			item.useStyle = 5;
-			item.useAnimation = 28;
-			item.useTime = 28;
+			Item.width = 20;
+			Item.height = 20;
+			Item.maxStack = 1;
+			Item.value = 100;
+			Item.rare = ItemRarityID.Blue;
+			Item.useStyle = ItemUseStyleID.Shoot;
+			Item.useAnimation = 28;
+			Item.useTime = 28;
 		}
-		
-		public static bool mapShiner=false;
 
 		// RightClick
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		public override bool CanRightClick()
-		{
-			return true;
-		}
-		
+		public override bool CanRightClick() => true;
+
 		public override void RightClick(Player player)
 		{
-			if(mapShiner)
+			if (Active)
 			{
-				mapShiner=false;
+				Active = false;
 				Main.NewText("Map Shine OFF!!");
 			}
 			else
 			{
-				mapShiner=true;
+				Active = true;
 				Main.NewText("Map Shine ON!!");
 			}
-			item.stack++;
+
+			Item.stack++;
 		}
+
 		public override void UpdateInventory(Player player)
 		{
-			if(mapShiner)
-			{
-				for(int x = Main.mapMinX;x < Main.mapMaxX; x++)
-				{
-					for(int y=Main.mapMinY;y < Main.mapMaxY; y++)
-					{
-						Main.Map.Update(x, y, Byte.MaxValue);
-					}
-				}
-			}
+			if (Active)
+				for (int x = Main.mapMinX; x < Main.mapMaxX; x++)
+				for (int y = Main.mapMinY; y < Main.mapMaxY; y++)
+					Main.Map.Update(x, y, byte.MaxValue);
 		}
-		
+
 		public override void AddRecipes()
 		{
-			ModRecipe recipe = new ModRecipe(mod);
-			recipe.AddTile(TileID.WorkBenches);
-			recipe.SetResult(this);
-			recipe.AddRecipe();
+			CreateRecipe()
+				.AddTile(TileID.WorkBenches)
+				.Register();
 		}
 	}
 }

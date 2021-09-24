@@ -2,31 +2,13 @@ using Terraria.ModLoader;
 
 namespace AutoStacker
 {
-	class AutoStacker : Mod
+	public class AutoStacker : Mod
 	{
-		
-		internal static AutoStacker instance;
-		public static Mod modMagicStorage = null;
-		public static Mod modMagicStorageExtra = null;
-		
-		public AutoStacker()
-		{
-			Properties = new ModProperties()
-			{
-				Autoload = true,
-			};
-		}
-		
+		public static bool MagicStorageLoaded { get; private set; }
+
 		public override void Load()
 		{
-			instance = this;
-			modMagicStorage = ModLoader.GetMod("MagicStorage");
-			modMagicStorageExtra = ModLoader.GetMod("MagicStorageExtra");
-		}
-
-		public override void Unload()
-		{
-			instance = null;
+			MagicStorageLoaded = ModLoader.HasMod("MagicStorage");
 		}
 	}
 }

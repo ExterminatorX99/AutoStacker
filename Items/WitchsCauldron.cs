@@ -13,66 +13,56 @@ namespace AutoStacker.Items
 
 		public override void SetDefaults()
 		{
-			item.width = 39;
-			item.height = 22;
-			item.maxStack = 99;
-			item.useTurn = true;
-			item.autoReuse = true;
-			item.useAnimation = 15;
-			item.useTime = 10;
-			item.useStyle = 1;
-			item.consumable = true;
-			item.value = 500;
-			item.createTile = mod.TileType("WitchsCauldron");
+			Item.width = 39;
+			Item.height = 22;
+			Item.maxStack = 99;
+			Item.useTurn = true;
+			Item.autoReuse = true;
+			Item.useAnimation = 15;
+			Item.useTime = 10;
+			Item.useStyle = ItemUseStyleID.Swing;
+			Item.consumable = true;
+			Item.value = 500;
+			Item.createTile = ModContent.TileType<Tiles.WitchsCauldron>();
 		}
-		
+
 		public override void AddRecipes()
 		{
-			ModRecipe recipe;
-			
-			recipe = new ModRecipe(mod);
-			recipe.AddIngredient(ItemID.Chest,1);
-			recipe.AddIngredient(ItemID.BlackCounterweight,1);
-			recipe.AddTile(TileID.WorkBenches);
-			recipe.SetResult(this);
-			recipe.AddRecipe();
+			CreateRecipe()
+				.AddIngredient(ItemID.Chest)
+				.AddIngredient(ItemID.BlackCounterweight)
+				.AddTile(TileID.WorkBenches)
+				.Register();
 
-			recipe = new ModRecipe(mod);
-			recipe.AddIngredient(ItemID.Chest,1);
-			recipe.AddIngredient(ItemID.BlueCounterweight,1);
-			recipe.AddTile(TileID.WorkBenches);
-			recipe.SetResult(this);
-			recipe.AddRecipe();
+			CreateRecipe()
+				.AddIngredient(ItemID.Chest)
+				.AddIngredient(ItemID.BlueCounterweight)
+				.AddTile(TileID.WorkBenches)
+				.Register();
 
-			recipe = new ModRecipe(mod);
-			recipe.AddIngredient(ItemID.Chest,1);
-			recipe.AddIngredient(ItemID.GreenCounterweight,1);
-			recipe.AddTile(TileID.WorkBenches);
-			recipe.SetResult(this);
-			recipe.AddRecipe();
+			CreateRecipe()
+				.AddIngredient(ItemID.Chest)
+				.AddIngredient(ItemID.GreenCounterweight)
+				.AddTile(TileID.WorkBenches)
+				.Register();
 
-			recipe = new ModRecipe(mod);
-			recipe.AddIngredient(ItemID.Chest,1);
-			recipe.AddIngredient(ItemID.PurpleCounterweight,1);
-			recipe.AddTile(TileID.WorkBenches);
-			recipe.SetResult(this);
-			recipe.AddRecipe();
+			CreateRecipe()
+				.AddIngredient(ItemID.Chest)
+				.AddIngredient(ItemID.PurpleCounterweight)
+				.AddTile(TileID.WorkBenches)
+				.Register();
 
-			recipe = new ModRecipe(mod);
-			recipe.AddIngredient(ItemID.Chest,1);
-			recipe.AddIngredient(ItemID.RedCounterweight,1);
-			recipe.AddTile(TileID.WorkBenches);
-			recipe.SetResult(this);
-			recipe.AddRecipe();
+			CreateRecipe()
+				.AddIngredient(ItemID.Chest)
+				.AddIngredient(ItemID.RedCounterweight)
+				.AddTile(TileID.WorkBenches)
+				.Register();
 
-			recipe = new ModRecipe(mod);
-			recipe.AddIngredient(ItemID.Chest,1);
-			recipe.AddIngredient(ItemID.YellowCounterweight,1);
-			recipe.AddTile(TileID.WorkBenches);
-			recipe.SetResult(this);
-			recipe.AddRecipe();
-
+			CreateRecipe()
+				.AddIngredient(ItemID.Chest)
+				.AddIngredient(ItemID.YellowCounterweight)
+				.AddTile(TileID.WorkBenches)
+				.Register();
 		}
-		
 	}
 }
