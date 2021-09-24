@@ -8,7 +8,7 @@ using Terraria.ModLoader;
 
 namespace AutoStacker.GlobalItems
 {
-	internal class RecieverChestSelector : GlobalItem
+	public class RecieverChestSelector : GlobalItem
 	{
 		public static readonly short[] ExcludeItemList =
 		{
@@ -30,15 +30,12 @@ namespace AutoStacker.GlobalItems
 		{
 			Players.RecieverChestSelector modPlayer = Main.LocalPlayer.GetModPlayer<Players.RecieverChestSelector>();
 			Point16 topLeft = modPlayer.TopLeft;
-			if
-			(
-				modPlayer.ActiveItem == null ||
+			if (modPlayer.ActiveItem == null ||
 				topLeft.X == -1 && topLeft.Y == -1 ||
 				!modPlayer.AutoSendEnabled ||
 				ExcludeItemList.Any(x => x == item.type) ||
 				item.stack <= 0 ||
-				item.IsAir
-			)
+				item.IsAir)
 				return true;
 
 			//Item depositItem=item.Clone();
@@ -64,7 +61,7 @@ namespace AutoStacker.GlobalItems
 			}
 		}
 
-		public bool Deposit(Item item, Player player)
+		public static bool Deposit(Item item, Player player)
 		{
 			Players.RecieverChestSelector modPlayer = Main.LocalPlayer.GetModPlayer<Players.RecieverChestSelector>();
 			Point16 topLeft = modPlayer.TopLeft;

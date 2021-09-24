@@ -5,7 +5,7 @@ using Terraria.ObjectData;
 
 namespace AutoStacker.Common
 {
-	internal class AutoStacker
+	public class AutoStacker
 	{
 		public static int FindChest(int originX, int originY)
 		{

@@ -1,35 +1,44 @@
-using System.Text.RegularExpressions;
+using MagicStorage;
+using MagicStorage.Components;
 using Terraria;
 using Terraria.DataStructures;
+using Terraria.ID;
 
 namespace AutoStacker.Common
 {
 	public static class MagicStorageConnecter
 	{
-		private static readonly Regex RegexMagicStorage = new("^MagicStorage(?!Extra)", RegexOptions.Compiled);
-
-		public static TileEntity FindHeart(Point16 origin)
+		public static TEStorageHeart FindHeart(Point16 origin)
 		{
-			TileEntity tEStorageCenter = TileEntity.ByPosition[origin];
-			if (tEStorageCenter == null || tEStorageCenter.GetType().Name != "TEStorageHeart")
-				return null;
-
-			return tEStorageCenter;
+			if (TileEntity.ByPosition.TryGetValue(origin, out TileEntity tileEntity))
+				if (tileEntity is TEStorageCenter center)
+					return center.GetHeart();
+			return null;
 		}
 
 		public static bool InjectItem(Point16 origin, Item item)
 		{
-			TileEntity tEStorageCenter = FindHeart(origin);
-			if (tEStorageCenter == null)
+			TEStorageHeart heart = FindHeart(origin);
+			if (heart == null)
 				return false;
 
-			if (RegexMagicStorage.IsMatch(tEStorageCenter.GetType().Assembly.GetName().Name))
-			{
-				MagicStorageAdapter.DepositItem(tEStorageCenter, item);
-				return true;
-			}
+			int oldStack = item.stack;
 
-			return false;
+			heart.DepositItem(item);
+
+			if (oldStack == item.stack)
+				return false;
+
+			HandleStorageItemChange(heart);
+			return true;
+		}
+
+		private static void HandleStorageItemChange(TEStorageHeart heart)
+		{
+			if (Main.netMode == NetmodeID.Server)
+				NetHelper.SendRefreshNetworkItems(heart.ID);
+			else if (Main.netMode == NetmodeID.SinglePlayer)
+				StorageGUI.RefreshItems();
 		}
 	}
 }

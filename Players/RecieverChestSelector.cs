@@ -6,7 +6,7 @@ using Terraria.ModLoader.IO;
 
 namespace AutoStacker.Players
 {
-	internal class RecieverChestSelector : ModPlayer
+	public class RecieverChestSelector : ModPlayer
 	{
 		public bool AutoSendEnabled;
 		public Item ActiveItem;
